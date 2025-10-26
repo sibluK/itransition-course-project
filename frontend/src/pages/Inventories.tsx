@@ -9,7 +9,7 @@ export default function Inventories() {
             <p>This is the inventories page where you can view and manage your inventories.</p>
             <Button 
                 className="mt-4"
-                onClick={() => navigate(`/inventories/52162/items`)}
+                onClick={() => navigate(`/inventory/52162/items`)}
                 >
                 Inventory #52162
             </Button>

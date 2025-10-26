@@ -23,7 +23,7 @@ export function Navbar() {
                 </SignedOut>
                 <SignedIn>
                     {isAdmin && <NavLink className="hover:underline" to="/admin">Admin</NavLink>}
-                    <NavLink className="hover:underline" to="/inventories">Inventories</NavLink>
+                    <NavLink className="hover:underline" to="/my-inventories">Inventories</NavLink>
                     <UserButton />
                 </SignedIn>
                 <ThemeToggle />

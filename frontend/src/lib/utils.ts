@@ -15,5 +15,6 @@ export function mapClerkUserToUser(clerkUser: any): User {
         lastLogin: new Date(clerkUser.lastSignInAt),
         joinedAt: new Date(clerkUser.createdAt),
         role: clerkUser.publicMetadata?.role || "user",
+        status: clerkUser.banned ? 'blocked' : 'active',
     };
 }

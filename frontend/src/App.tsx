@@ -13,6 +13,8 @@ import Fields from './pages/InventorySections/Fields'
 import Statistics from './pages/InventorySections/Statistics'
 import Inventory from './pages/Inventory'
 import Layout from './components/layout'
+import ItemPage from './pages/ItemPage'
+import UserInventories from './pages/UserInventories'
 
 function App() {
     return (
@@ -21,9 +23,11 @@ function App() {
                 <Routes>
                     <Route index element={<Home />} />
                     <Route path="/admin" element={<ProtectedRoute requiredRoles={['admin']}><Admin /></ProtectedRoute>} />
-                    <Route path="/inventories" element={<ProtectedRoute requiredRoles={['admin', 'user']}><Inventories /></ProtectedRoute>} />
-                    <Route path="/inventories/:id" element={<Inventory />}>
+                    <Route path="/admin/users/:userId/inventories" element={<ProtectedRoute requiredRoles={['admin']}><UserInventories /></ProtectedRoute>} />
+                    <Route path="/my-inventories" element={<ProtectedRoute requiredRoles={['admin', 'user']}><Inventories /></ProtectedRoute>} />
+                    <Route path="/inventory/:inventoryId" element={<Inventory />}>
                         <Route path="items" element={<Items />} />
+                        <Route path='items/:itemId' element={<ItemPage />} />
                         <Route path="discussions" element={<Discussions />} />
                         <Route path="settings" element={<Settings />} />
                         <Route path="custom" element={<Custom />} />
