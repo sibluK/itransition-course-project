@@ -35,5 +35,13 @@
     "delete": "Ištrinti",
     "make_admin": "Padaryti administratoriumi",
     "make_user": "Padaryti naudotoju",
-    "email_search_placeholder": "Ieškoti pagal el. paštą..."
+    "email_search_placeholder": "Ieškoti pagal el. paštą...",
+    "inventory_title": "Pavadinimas",
+    "inventory_description": "Aprašymas",
+    "inventory_category": "Kategorija",
+    "inventory_tags": "Žymos",
+    "inventory_created_at": "Sukurta",
+    "inventory_updated_at": "Atnaujinta",
+    "title_search_placeholder": "Ieškoti pagal pavadinimą...",
+    "new_inventory": "Naujas Inventorius"
 }

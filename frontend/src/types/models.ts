@@ -8,3 +8,67 @@ export interface User {
     role: 'admin' | 'user';
     status: 'active' | 'blocked';
 }
+
+export interface Inventory {
+    id: number;
+    creatorId: string;
+    title: string;
+    description?: string;
+    image_url?: string;
+    categoryId?: number;
+    isPublic: boolean;
+    version: number;
+    updatedAt: Date;
+    createdAt: Date;
+}
+
+export interface Category {
+    id: number;
+    name: string;
+}
+
+export interface Tag {
+    id: number;
+    name: string;
+}
+
+export interface Item {
+    id: number;
+    inventoryId: number;
+    c_sl_string_1?: string;
+    c_sl_string_2?: string;
+    c_sl_string_3?: string;
+    c_ml_string_1?: string;
+    c_ml_string_2?: string;
+    c_ml_string_3?: string;
+    c_number_1?: number;
+    c_number_2?: number;
+    c_number_3?: number;
+    c_link_1?: string;
+    c_link_2?: string;
+    c_link_3?: string;
+    c_boolean_1?: boolean;
+    c_boolean_2?: boolean;
+    c_boolean_3?: boolean;
+    updatedAt: Date;
+    createdAt: Date;
+}
+
+type FieldType = 'sl_string' | 'ml_string' | 'number' | 'link' | 'boolean';
+
+export interface CustomField {
+    id: number;
+    customId?: string;
+    inventoryId: number;
+    fieldKey: string;
+    fieldType: FieldType;
+    label: string;
+    isEnabled: boolean;
+    displayOrder: number;
+}
+
+export interface InventoryWithCategoryAndTags {
+    inventory: Inventory;
+    category: Category;
+    tags: Tag[];
+}

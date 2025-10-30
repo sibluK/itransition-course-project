@@ -4,8 +4,6 @@ import { useUsers } from "@/hooks/useUsers";
 export default function Admin() {
     const { 
         users, 
-        isLoading, 
-        error, 
         updateUsersStatus, 
         updateUsersRole,
         deleteUsers

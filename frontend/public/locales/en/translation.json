@@ -35,5 +35,13 @@
     "delete": "Delete",
     "make_admin": "Make Admin",
     "make_user": "Make User",
-    "email_search_placeholder": "Search by email..."
+    "email_search_placeholder": "Search by email...",
+    "inventory_title": "Title",
+    "inventory_description": "Description",
+    "inventory_category": "Category",
+    "inventory_tags": "Tags",
+    "inventory_created_at": "Created At",
+    "inventory_updated_at": "Updated At",
+    "title_search_placeholder": "Search by title...",
+    "new_inventory": "New Inventory"
 }

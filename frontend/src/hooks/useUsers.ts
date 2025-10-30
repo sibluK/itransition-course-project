@@ -79,7 +79,7 @@ export const useUsers = () => {
             userIds: string[];
             action: 'ban' | 'unban';
         }) => changeUsersStatus(params.userIds, params.action),
-        onSuccess: (data, params) => {
+        onSuccess: (_data, params) => {
             queryClient.setQueryData(['users'], (oldData: User[]) => {
                 if (!oldData) return oldData;
                 return oldData.map(user => {
@@ -100,7 +100,7 @@ export const useUsers = () => {
             userIds: string[];
             newRole: string;
         }) => changeUserRole(params.userIds, params.newRole),
-        onSuccess: (data, params) => {
+        onSuccess: (_data, params) => {
             queryClient.setQueryData(['users'], (oldData: User[]) => {
                 if (!oldData) return oldData;
                 return oldData.map(user => {
@@ -118,7 +118,7 @@ export const useUsers = () => {
 
     const { mutateAsync: deleteUsersMutation } = useMutation({
         mutationFn: (userIds: string[]) => deleteUsers(userIds),
-        onSuccess: (data, userIds) => {
+        onSuccess: (_data, userIds) => {
             queryClient.setQueryData(['users'], (oldData: User[]) => {
                 if (!oldData) return oldData;
                 return oldData.filter(user => !userIds.includes(user.id));
