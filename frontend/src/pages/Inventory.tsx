@@ -1,6 +1,10 @@
 import { Outlet, useLocation, useNavigate, useParams } from "react-router";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useMemo } from "react";
+import { useInventory } from "@/hooks/useInventory";
+import { InventoryProvider, useInventoryContext } from "@/contexts/inventory-provider";
+import { Spinner } from "@/components/ui/spinner";
+import { AlertTriangle, Check } from "lucide-react";
 
 const tabs = [
     { value: 'items', label: 'Items' },
@@ -14,12 +18,12 @@ const tabs = [
 
 export default function Inventory() {
     const { inventoryId } = useParams();
+    const { inventory, tags, writeAccess, isLoading, error } = useInventory({ inventoryId: Number(inventoryId) });
     const navigate = useNavigate();
     const location = useLocation();
 
     const activeTab = useMemo(() => {
         const segments = location.pathname.split('/');
-        console.log("Path Segments:", segments);
         return segments[segments.length - 1] || 'items';
     }, [location.pathname]);
 
@@ -27,21 +31,55 @@ export default function Inventory() {
         navigate(`/inventory/${inventoryId}/${value}`);
     }
 
+    if (isLoading) {
+        return <Spinner className="mx-auto w-[35px] h-[35px]" />; 
+    }
+
+    if (error || !inventory) {
+        return <div>Error loading inventory. Please try again.</div>; 
+    }
+
     return (
-        <div>
-            <h1 className="text-2xl font-bold mb-4">Inventory Page</h1>
-            <p>This is the inventory page where you can view and manage a specific inventory.</p>
-            <p>Inventory ID: {inventoryId}</p>
-            <Tabs value={activeTab} onValueChange={handleTabChange} >
-                <TabsList className="w-full" >
-                    {tabs.map((tab) => (
-                        <TabsTrigger key={tab.value} value={tab.value}>
-                            {tab.label}
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
-            </Tabs>
-            <Outlet />
+        <InventoryProvider initialData={{...inventory, tags: tags.map(t => t.name)}} inventoryId={Number(inventoryId)}>
+            <div>
+                <div className="flex items-center gap-4 mb-4 justify-between lg:justify-start">
+                    <h1 className="text-2xl lg:text-4xl font-bold text-nowrap">{inventory.title}</h1>
+                    <AutoSaveStatus />
+                </div>
+                <Tabs value={activeTab} onValueChange={handleTabChange} className="overflow-x-auto mb-5">
+                    <TabsList className="flex gap-1 w-full lg:w-fit">
+                        {tabs.map((tab) => (
+                            <TabsTrigger key={tab.value} value={tab.value} className="p-4">
+                                {tab.label}
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
+                </Tabs>
+                <Outlet />
+            </div>
+        </InventoryProvider>
+    );
+}
+
+function AutoSaveStatus() {
+    const { isSaving, hasChanges } = useInventoryContext();
+    const saved = !hasChanges && !isSaving;
+
+    return (
+        <div className="flex gap-2 text-nowrap">
+            {isSaving && 
+            <span className="flex items-center bg-amber-200 text-amber-900 px-2 py-1 rounded-md text-sm">
+                <Spinner className="inline-block w-4 h-4 mr-1" />
+                Saving...
+            </span>}
+            {(hasChanges && !isSaving) && <span className="flex items-center bg-red-200 text-red-900 px-2 py-1 rounded-md text-sm">
+                <AlertTriangle className="inline-block w-4 h-4 mr-1" />
+                Unsaved changes
+            </span>}
+            {saved && <span className="flex items-center bg-green-200 text-green-900 px-2 py-1 rounded-md text-sm">
+                <Check className="inline-block w-4 h-4 mr-1" />
+                All changes saved
+            </span>}
         </div>
     );
 }

@@ -11,7 +11,7 @@ import { useState } from "react";
 export function Navbar() {
     const isAdmin = useUserRole() === "admin";
     return (
-        <nav className="flex items-center p-3 border-b gap-4">
+        <nav className="flex items-center p-3 border-b gap-4 overflow-x-hidden">
             <NavLink className="text-xl font-medium" to="/">Inventory Manager</NavLink>
             <GlobalSearch />
             <div className="flex items-center gap-4 ml-auto">

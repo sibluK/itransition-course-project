@@ -44,6 +44,7 @@ export const tagsTable = pgTable("tags", {
     },
     (table) => [
         uniqueIndex("tags_name_unique_idx").on(sql`lower(${table.name})`),
+        index("tags_name_idx").on(table.name),
     ],
 );
 

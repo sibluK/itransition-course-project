@@ -5,7 +5,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import { Dropzone, DropzoneContent, DropzoneEmptyState } from '@/components/ui/shadcn-io/dropzone';
 import { useEffect, useState } from "react";
 import { useCategories } from "@/hooks/useCategories";
 import { Combobox } from "./combobox";
@@ -13,6 +12,8 @@ import type { Category, Tag } from "@/types/models";
 import { useDebounce } from 'use-debounce';
 import { Autocomplete } from "./autocomplete";
 import { useTags } from "@/hooks/useTags";
+import { UploadDropzone } from "./upload-dropzone";
+import { TagsList } from "./tags-list";
 
 interface CreateInventoryFormProps {
     onSuccess: () => void;
@@ -59,7 +60,7 @@ export default function CreateInventoryForm({ onSuccess }: CreateInventoryFormPr
         onSuccess();
     }
 
-    const handleDrop = (acceptedFiles: File[]) => {
+    const handleDrop = async (acceptedFiles: File[]) => {
         const file = acceptedFiles[0];
         if (file) {
             form.setValue("image", file, { shouldValidate: true, shouldDirty: true });
@@ -139,17 +140,10 @@ export default function CreateInventoryForm({ onSuccess }: CreateInventoryFormPr
                                 />
                             </FormControl>
                             {field.value && field.value.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {field.value.map((tagName) => (
-                                        <span
-                                            key={tagName}
-                                            className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
-                                            onClick={() => handleRemoveTag(tagName)}
-                                        >
-                                            {tagName}
-                                        </span>
-                                    ))}
-                                </div>
+                                <TagsList
+                                    tags={field.value}
+                                    handleRemoveTag={handleRemoveTag}
+                                />
                             )}
                             <FormMessage />
                         </FormItem>
@@ -163,25 +157,13 @@ export default function CreateInventoryForm({ onSuccess }: CreateInventoryFormPr
                         <FormItem>
                             <FormLabel>Image</FormLabel>
                             <FormControl>
-                                <Dropzone
-                                    accept={{ 'image/jpeg': [], 'image/png': [] }}
+                                <UploadDropzone
+                                    onDrop={handleDrop}
+                                    previewUrl={previewUrl}
                                     maxFiles={1}
                                     maxSize={1024 * 1024 * 10}
                                     minSize={1024}
-                                    onDrop={handleDrop}
-                                    onError={console.error}
-                                >
-                                    {previewUrl ? (
-                                        <div className="p-2">
-                                            <img src={previewUrl} alt="Preview" className="max-h-40 rounded-md" />
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <DropzoneEmptyState />
-                                            <DropzoneContent />
-                                        </>
-                                    )}
-                                </Dropzone>
+                                />
                             </FormControl>
                         </FormItem>
                     )}

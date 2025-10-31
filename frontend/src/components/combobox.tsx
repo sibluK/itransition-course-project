@@ -21,9 +21,10 @@ interface ComboboxProps {
     data: { label: string; value: string }[];
     value: string;
     onChange: (value: string) => void;
+    classname?: string;
 }
 
-export function Combobox({ data, value, onChange }: ComboboxProps) {
+export function Combobox({ data, value, onChange, classname }: ComboboxProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -33,7 +34,8 @@ export function Combobox({ data, value, onChange }: ComboboxProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className={`${classname} w-full justify-between`}
+
         >
           {value
             ? data.find((item) => item.value === value)?.label
