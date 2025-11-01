@@ -4,6 +4,7 @@ import adminRoutes from './routes/admin-routes.js';
 import inventoryRoutes from './routes/inventory-routes.js';
 import categoryRoutes from './routes/category-routes.js';
 import tagRoutes from './routes/tag-routes.js';
+import accessRoutes from './routes/access-routes.js';
 import cors from 'cors'
 import { corsOptions } from './config/cors.js';
 import { clerkMiddleware } from '@clerk/express';
@@ -19,5 +20,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/inventories', inventoryRoutes)
 app.use('/api/categories', categoryRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/access', accessRoutes);
 
 export default app;

@@ -9,6 +9,8 @@ export interface User {
     status: 'active' | 'blocked';
 }
 
+export type AccessUser = Omit<User, 'lastLogin' | 'role' | 'status' | 'joinedAt'>;
+
 export interface Inventory {
     id: number;
     creatorId: string;

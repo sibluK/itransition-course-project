@@ -16,6 +16,7 @@ interface InventoryUpdatePayload {
     title: string;
     description?: string;
     categoryId?: number;
+    isPublic: boolean;
     tags: string[];
 }
 
