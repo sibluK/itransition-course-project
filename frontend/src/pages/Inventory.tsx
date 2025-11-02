@@ -5,6 +5,7 @@ import { useInventory } from "@/hooks/useInventory";
 import { InventoryProvider, useInventoryContext } from "@/contexts/inventory-provider";
 import { Spinner } from "@/components/ui/spinner";
 import { AlertTriangle, Check } from "lucide-react";
+import { InventorySocketProvider } from "@/contexts/inventory-socket-provider";
 
 const tabs = [
     { value: 'items', label: 'Items' },
@@ -41,22 +42,24 @@ export default function Inventory() {
 
     return (
         <InventoryProvider initialData={{...inventory, tags: tags.map(t => t.name)}} inventoryId={Number(inventoryId)}>
-            <div>
-                <div className="flex items-center gap-4 mb-4 justify-between lg:justify-start">
-                    <h1 className="text-2xl lg:text-4xl font-bold text-nowrap">{inventory.title}</h1>
-                    <AutoSaveStatus />
+            <InventorySocketProvider inventoryId={Number(inventoryId)} hasWriteAccess={writeAccess}>    
+                <div>
+                    <div className="flex items-center gap-4 mb-4 justify-between lg:justify-start">
+                        <h1 className="text-2xl lg:text-4xl font-bold text-nowrap">{inventory.title}</h1>
+                        <AutoSaveStatus />
+                    </div>
+                    <Tabs value={activeTab} onValueChange={handleTabChange} className="overflow-x-auto mb-5">
+                        <TabsList className="flex gap-1 w-full lg:w-fit">
+                            {tabs.map((tab) => (
+                                <TabsTrigger key={tab.value} value={tab.value} className="p-4">
+                                    {tab.label}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
+                    <Outlet />
                 </div>
-                <Tabs value={activeTab} onValueChange={handleTabChange} className="overflow-x-auto mb-5">
-                    <TabsList className="flex gap-1 w-full lg:w-fit">
-                        {tabs.map((tab) => (
-                            <TabsTrigger key={tab.value} value={tab.value} className="p-4">
-                                {tab.label}
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
-                </Tabs>
-                <Outlet />
-            </div>
+            </InventorySocketProvider>
         </InventoryProvider>
     );
 }

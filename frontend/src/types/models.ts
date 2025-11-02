@@ -74,3 +74,14 @@ export interface InventoryWithCategoryAndTags {
     category: Category;
     tags: Tag[];
 }
+
+export interface DiscussionPost {
+    id: number;
+    inventoryId: number;
+    userId: string;
+    userEmail: string;
+    userImageUrl: string;
+    content: string;
+    createdAt: Date;
+    updatedAt: Date;
+}

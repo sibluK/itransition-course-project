@@ -1,4 +1,4 @@
-import { boolean, integer, pgTable, varchar, index, numeric, pgEnum, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, varchar, index, numeric, pgEnum, timestamp, uniqueIndex, text } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const fieldTypeEnum = pgEnum('field_type', [
@@ -95,4 +95,15 @@ export const customFieldsTable = pgTable("custom_fields", {
     label: varchar({ length: 255 }).notNull(),
     isEnabled: boolean().notNull().default(false),
     displayOrder: integer().notNull().default(0),
+});
+
+export const discussionPostsTable = pgTable("discussion_posts", {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    inventoryId: integer().notNull().references(() => inventoriesTable.id, { onDelete: "cascade" }),
+    userId: varchar({ length: 255 }).notNull(),
+    userEmail: varchar({ length: 255 }).notNull(),
+    userImageUrl: varchar({ length: 255 }),
+    content: text().notNull(),
+    createdAt: timestamp().defaultNow().notNull(),
+    updatedAt: timestamp().defaultNow().notNull(),
 });

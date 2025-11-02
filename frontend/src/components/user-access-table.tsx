@@ -2,7 +2,6 @@ import type { AccessUser } from "@/types/models";
 import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable, type ColumnDef, type Table as TableType } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
 import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table } from "./ui/table";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
@@ -20,8 +19,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { useDebounce } from "use-debounce";
 import { useUsersSearch } from "@/hooks/useUsersSearch";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Label } from "./ui/label";
 import { Spinner } from "./ui/spinner";
 
@@ -35,7 +32,6 @@ interface UserAccessTableProps {
 
 export function UserAccessTable({ data, search, setSearch, addUserToWriteAccess, removeUsersFromWriteAccess }: UserAccessTableProps) {
     const { i18n, t } = useTranslation();
-    const navigate = useNavigate();
     const [rowSelection, setRowSelection] = useState({});
     const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 

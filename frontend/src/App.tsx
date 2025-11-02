@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import './App.css'
 import Home from './pages/Home'
 import ProtectedRoute from './components/protected-route'
@@ -34,6 +34,7 @@ function App() {
                         <Route path="access" element={<Access />} />
                         <Route path="fields" element={<Fields />} />
                         <Route path="statistics" element={<Statistics />} />
+                        <Route index element={<Navigate to="items" replace />} />
                     </Route>
                     <Route path="*" element={<div>404 Not Found</div>} />
                 </Routes>
