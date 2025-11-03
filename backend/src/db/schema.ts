@@ -88,7 +88,7 @@ export const itemsTable = pgTable("items", {
 
 export const customFieldsTable = pgTable("custom_fields", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    customId: varchar({ length: 255 }).notNull(),
+    customId: varchar({ length: 255 }).notNull().default(sql`gen_random_uuid()`),
     inventoryId: integer().notNull().references(() => inventoriesTable.id, { onDelete: 'cascade'}),
     fieldKey: varchar({ length: 255 }).notNull(),
     fieldType: fieldTypeEnum().notNull(),

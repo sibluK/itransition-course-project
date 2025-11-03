@@ -138,7 +138,7 @@ export const createInventory = async (req: Request, res: Response): Promise<void
             })
             .returning();
 
-        if (tags.length < 0) {
+        if (!tags || !Array.isArray(tags) || tags.length === 0) {
             res.status(201).json({ message: 'Inventory created' });
             return;
         }
