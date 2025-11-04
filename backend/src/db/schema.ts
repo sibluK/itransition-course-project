@@ -93,6 +93,7 @@ export const customFieldsTable = pgTable("custom_fields", {
     fieldKey: varchar({ length: 255 }).notNull(),
     fieldType: fieldTypeEnum().notNull(),
     label: varchar({ length: 255 }).notNull(),
+    description: varchar({ length: 1024 }),
     isEnabled: boolean().notNull().default(false),
     displayOrder: integer().notNull().default(0),
 });
