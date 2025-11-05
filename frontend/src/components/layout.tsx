@@ -1,4 +1,3 @@
-import Breadcrumbs from "./breadcrumbs";
 import { Navbar } from "./navbar";
 import { Toaster } from "@/components/ui/sonner";
 

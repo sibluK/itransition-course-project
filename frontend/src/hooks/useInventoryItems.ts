@@ -1,6 +1,5 @@
 import type { Item } from "@/types/models";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { version } from "react";
 
 interface UseInventoryItems {
     inventoryId: number;

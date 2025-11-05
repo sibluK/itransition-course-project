@@ -7,7 +7,7 @@ import type { Inventory } from "@/types/models";
 export default function Search() {
     const [searchParams] = useSearchParams();
     const query = searchParams.get("q") || "";
-    const { data, isLoading, error } = useFullTextSearch({ query });
+    const { data, isLoading } = useFullTextSearch({ query });
 
     console.log("Search query:", query);
     console.log("Search results:", data);
