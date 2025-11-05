@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 
 export default function Items() {
     const { inventoryId } = useParams();
-    const { items, isLoading, error, updateItem, deleteItem } = useInventoryItems({ inventoryId: Number(inventoryId) });
+    const { items } = useInventoryItems({ inventoryId: Number(inventoryId) });
     const { data: customFields } = useFields({ inventoryId: Number(inventoryId) });
     const [editingItem, setEditingItem] = useState<Item | null>(null);
     const { t } = useTranslation();

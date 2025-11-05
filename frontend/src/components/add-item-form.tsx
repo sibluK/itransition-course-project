@@ -4,7 +4,6 @@ import { useInventoryItems } from "@/hooks/useInventoryItems";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit, Plus } from "lucide-react";
 import type { Item } from "@/types/models";
 
 interface AddItemForm {
