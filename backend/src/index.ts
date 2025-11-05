@@ -8,6 +8,7 @@ import accessRoutes from './routes/access-routes.js';
 import discussionRoutes from './routes/discussion-routes.js';
 import searchRoutes from './routes/search-routes.js';
 import fieldRoutes from './routes/fields-routes.js';
+import itemRoutes from './routes/item-routes.js';
 import cors from 'cors'
 import { corsOptions } from './config/cors.js';
 import { clerkMiddleware } from '@clerk/express';
@@ -27,5 +28,6 @@ app.use('/api/access', accessRoutes);
 app.use('/api/discussions', discussionRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/fields', fieldRoutes);
+app.use('/api/items', itemRoutes);
 
 export default app;

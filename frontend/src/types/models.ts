@@ -37,6 +37,7 @@ export interface Tag {
 export interface Item {
     id: number;
     inventoryId: number;
+    customId?: string;
     c_sl_string_1?: string;
     c_sl_string_2?: string;
     c_sl_string_3?: string;
@@ -52,6 +53,7 @@ export interface Item {
     c_boolean_1?: boolean;
     c_boolean_2?: boolean;
     c_boolean_3?: boolean;
+    version: number;
     updatedAt: Date;
     createdAt: Date;
 }
@@ -60,11 +62,11 @@ type FieldType = 'sl_string' | 'ml_string' | 'number' | 'link' | 'boolean';
 
 export interface CustomField {
     id: number;
-    customId?: string;
     inventoryId: number;
     fieldKey: string;
     fieldType: FieldType;
     label: string;
+    description: string;
     isEnabled: boolean;
     displayOrder: number;
 }

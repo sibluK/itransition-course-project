@@ -1,3 +1,4 @@
+import type { CustomField } from "@/types/models";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 interface UseFieldsProps {
@@ -33,7 +34,7 @@ export function useFields({ inventoryId }: UseFieldsProps) {
         return data;
     }
 
-    const { data, error, isLoading } = useQuery({
+    const { data, error, isLoading } = useQuery<CustomField[]>({
         queryKey: ["customFields", { inventoryId }],
         queryFn: fetchInventoryFields,
         enabled: !!inventoryId,

@@ -44,12 +44,12 @@ export default function Inventory() {
         <InventoryProvider initialData={{...inventory, tags: tags.map(t => t.name)}} inventoryId={Number(inventoryId)}>
             <InventorySocketProvider inventoryId={Number(inventoryId)} hasWriteAccess={writeAccess}>    
                 <div>
-                    <div className="flex items-center gap-4 mb-4 justify-between lg:justify-start">
+                    <div className="flex items-center gap-4 mb-4 justify-between lg:justify-start flex-wrap">
                         <h1 className="text-2xl lg:text-4xl font-bold text-nowrap">{inventory.title}</h1>
                         <AutoSaveStatus />
                     </div>
                     <Tabs value={activeTab} onValueChange={handleTabChange} className="overflow-x-auto mb-5">
-                        <TabsList className="flex gap-1 w-full lg:w-fit">
+                        <TabsList className="flex gap-1 justify-start">
                             {tabs.map((tab) => (
                                 <TabsTrigger key={tab.value} value={tab.value} className="p-4">
                                     {tab.label}

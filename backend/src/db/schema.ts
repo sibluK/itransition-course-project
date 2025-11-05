@@ -1,5 +1,6 @@
 import { boolean, integer, pgTable, varchar, index, numeric, pgEnum, timestamp, uniqueIndex, text } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { version } from "os";
 
 export const fieldTypeEnum = pgEnum('field_type', [
     'sl_string',
@@ -67,6 +68,7 @@ export const inventoryWriteAccessTable = pgTable("inventory_write_access", {
 export const itemsTable = pgTable("items", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     inventoryId: integer().notNull().references(() => inventoriesTable.id, { onDelete: 'cascade' }),
+    customId: varchar({ length: 255 }).notNull().default(sql`gen_random_uuid()`),
     c_sl_string_1: varchar({ length: 255 }),
     c_sl_string_2: varchar({ length: 255 }),
     c_sl_string_3: varchar({ length: 255 }),
@@ -82,13 +84,13 @@ export const itemsTable = pgTable("items", {
     c_boolean_1: boolean(),
     c_boolean_2: boolean(),
     c_boolean_3: boolean(),
+    version: integer().notNull().default(1),
     updatedAt: timestamp().notNull().defaultNow(),
     createdAt: timestamp().notNull().defaultNow(),
 });
 
 export const customFieldsTable = pgTable("custom_fields", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    customId: varchar({ length: 255 }).notNull().default(sql`gen_random_uuid()`),
     inventoryId: integer().notNull().references(() => inventoriesTable.id, { onDelete: 'cascade'}),
     fieldKey: varchar({ length: 255 }).notNull(),
     fieldType: fieldTypeEnum().notNull(),

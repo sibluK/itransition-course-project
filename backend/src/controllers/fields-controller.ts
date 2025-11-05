@@ -99,7 +99,6 @@ export const updateCustomFieldsForInventory = async (req: Request, res: Response
                     .insert(customFieldsTable)
                     .values({
                         inventoryId,
-                        customId: crypto.randomUUID(),
                         fieldKey,
                         fieldType,
                         label: label || '',
