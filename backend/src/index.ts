@@ -15,8 +15,16 @@ import { clerkMiddleware } from '@clerk/express';
 
 const app = express();
 
-app.use(clerkMiddleware());
 app.use(cors(corsOptions));
+
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    console.log('Origin:', req.headers.origin);
+    console.log('Authorization:', req.headers.authorization ? 'Present' : 'Missing');
+    next();
+});
+
+app.use(clerkMiddleware());
 app.use(express.json());
 
 app.use('/api/users', userRoutes);

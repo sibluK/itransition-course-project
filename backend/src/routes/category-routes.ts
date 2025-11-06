@@ -5,6 +5,6 @@ import { requireAuth } from "@clerk/express";
 
 const router = Router();
 
-router.get("/", checkStatus(), requireAuth(), getCategories);
+router.get("/",requireAuth(), checkStatus(), getCategories);
 
 export default router;

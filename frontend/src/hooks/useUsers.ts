@@ -1,15 +1,22 @@
 import { mapClerkUserToUser } from "@/lib/utils";
 import type { User } from "@/types/models";
+import { useAuth } from "@clerk/clerk-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useUsers = () => {
     const queryClient = useQueryClient();
+    const { getToken } = useAuth();
 
     const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000/api';
 
     const fetchUsers = async () => {
+        const token = await getToken();
+
         const response = await fetch(`${API_URL}/admin/users`, {
             credentials: 'include',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            }
         });
         if (!response.ok) {
             throw new Error('Failed to fetch users');

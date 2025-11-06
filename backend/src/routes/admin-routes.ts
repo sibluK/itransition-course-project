@@ -5,10 +5,10 @@ import { banUsers, deleteUsers, getUsers, unbanUsers, updateUserRole } from "../
 
 const router = Router();
 
-router.get("/users", requireRole("admin"), requireAuth(), checkStatus(), getUsers);
-router.post("/users/role", requireRole("admin"), requireAuth(), checkStatus(), updateUserRole);
-router.post("/users/ban", requireRole("admin"), requireAuth(), checkStatus(), banUsers);
-router.post("/users/unban", requireRole("admin"), requireAuth(), checkStatus(), unbanUsers);
-router.post("/users/delete", requireRole("admin"), requireAuth(), checkStatus(), deleteUsers);
+router.get("/users", requireAuth(), checkStatus(), requireRole("admin"), getUsers);
+router.post("/users/role", requireAuth(), checkStatus(), requireRole("admin"), updateUserRole);
+router.post("/users/ban", requireAuth(), checkStatus(), requireRole("admin"), banUsers);
+router.post("/users/unban", requireAuth(), checkStatus(), requireRole("admin"), unbanUsers);
+router.post("/users/delete", requireAuth(), checkStatus(), requireRole("admin"), deleteUsers)
 
 export default router;
