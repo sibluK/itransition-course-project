@@ -54,7 +54,6 @@ export const getUserInventories = async (req: Request, res: Response): Promise<v
 
 export const getInventoryById = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { userId } = getAuth(req);
         const inventoryId = req.params.inventoryId;
         if (!inventoryId) {
             res.status(400).json({ error: 'Inventory ID is required' });
@@ -81,26 +80,34 @@ export const getInventoryById = async (req: Request, res: Response): Promise<voi
 
         const { inventory, tags } = inventoryData[0] as { inventory: typeof inventoriesTable.$inferSelect; tags: any[] };
 
-        if (userId && inventory && inventory.creatorId === userId)
-            writeAccess = true;
+        const { userId } = getAuth(req);
 
-        if (userId && inventory && inventory.creatorId !== userId) {
-            const accessRecord = await db
-                .select()
-                .from(inventoryWriteAccessTable)
-                .where(and(
-                    eq(inventoryWriteAccessTable.inventoryId, Number(inventoryId)),
-                    eq(inventoryWriteAccessTable.userId, userId)
-                ))
-                .limit(1);
-            if (accessRecord.length > 0)
+        if (userId) {
+            if (inventory && inventory.creatorId === userId) {
                 writeAccess = true;
+            } else {
+                const accessRecord = await db
+                    .select()
+                    .from(inventoryWriteAccessTable)
+                    .where(and(
+                        eq(inventoryWriteAccessTable.inventoryId, Number(inventoryId)),
+                        eq(inventoryWriteAccessTable.userId, userId)
+                    ))
+                    .limit(1);
+                if (accessRecord.length > 0) {
+                    writeAccess = true;
+                }
+            }
         }
 
-        const user = await clerkClient.users.getUser(userId!)
-
-        if (user.publicMetadata.role === 'admin')
-            writeAccess = true;
+        try {
+            const user = await clerkClient.users.getUser(inventory.creatorId);
+            if (user.publicMetadata.role === 'admin') {
+                writeAccess = true;
+            }
+        } catch (clerkError) {
+            console.error('Error fetching user from Clerk:', clerkError);
+        }
 
         res.status(200).json({ 
             inventory: inventory,
@@ -108,6 +115,7 @@ export const getInventoryById = async (req: Request, res: Response): Promise<voi
             writeAccess: writeAccess
         });
     } catch (error) {
+        console.error('Error fetching inventory:', error);
         res.status(500).json({ error: 'Failed to fetch inventory' });
     }
 }
