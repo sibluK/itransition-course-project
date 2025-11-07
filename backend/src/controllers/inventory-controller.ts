@@ -185,7 +185,6 @@ export const createInventory = async (req: Request, res: Response): Promise<void
             .onConflictDoNothing({ target: [inventoryTagsTable.inventoryId, inventoryTagsTable.tagId] });
         
         res.status(201).json({ message: 'Inventory created' });
-
     } catch (error) {
         console.error('Error creating inventory:', error);
         res.status(500).json({ error: 'Failed to create inventory' });

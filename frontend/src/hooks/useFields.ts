@@ -1,48 +1,40 @@
 import type { CustomField } from "@/types/models";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useApiRequest } from "./useApiRequest";
 
 interface UseFieldsProps {
     inventoryId: number;
 }
 
 export function useFields({ inventoryId }: UseFieldsProps) {
-    const API_URL = import.meta.env.VITE_BACKEND_URL;
+    const { sendRequest } = useApiRequest();
 
-    const fetchInventoryFields = async () => {
-        if (!inventoryId) return [];
-        const response = await fetch(`${API_URL}/fields/${inventoryId}`, {
-            credentials: "include",
+    const fetchInventoryFields = async (): Promise<CustomField[]> => {
+        const { data } = await sendRequest<CustomField[]>({
+            method: "GET",
+            url: `/fields/${inventoryId}`
         });
-        if (!response.ok) {
-            throw new Error("Failed to fetch custom fields");
-        }
-        const data = await response.json();
-        return data;
+        return data ?? [];
     };
 
-    const updateInventoryFields = async (updates: any[]) => {
-        const response = await fetch(`${API_URL}/fields/${inventoryId}`, {
+    const updateInventoryFields = async (updates: Partial<CustomField>[]): Promise<void> => {
+        await sendRequest({
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify(updates),
+            url: `/fields/${inventoryId}`,
+            body: updates
         });
-        if (!response.ok) {
-            throw new Error("Failed to update custom fields");
-        }
-        const data = await response.json();
-        return data;
-    }
+    };
 
-    const { data, error, isLoading } = useQuery<CustomField[]>({
+    const { data, error, isLoading } = useQuery({
         queryKey: ["customFields", { inventoryId }],
         queryFn: fetchInventoryFields,
         enabled: !!inventoryId,
+        staleTime: 5 * 60 * 1000
     });
 
     const { mutateAsync: saveFields } = useMutation({
-        mutationFn: updateInventoryFields,
-    })
+        mutationFn: updateInventoryFields
+    });
 
     return { data, error, isLoading, saveFields };
 }

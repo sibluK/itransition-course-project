@@ -1,6 +1,7 @@
 import type { InventoryWithCategoryAndTags } from "@/types/models";
 import { useAuth } from "@clerk/clerk-react";
 import { useQuery } from "@tanstack/react-query";
+import { useApiRequest } from "./useApiRequest";
 
 interface GetUsersInventoriesResponse {
     ownedInventories: InventoryWithCategoryAndTags[];
@@ -9,31 +10,21 @@ interface GetUsersInventoriesResponse {
 
 export function useUserInventories() {
     const { userId, isLoaded } = useAuth();
-    const API_URL = import.meta.env.VITE_BACKEND_URL;
+    const { sendRequest } = useApiRequest();
 
-    const fetchUserInventories = async () => {
-        if (!userId) return;
-
-        try {
-            const response = await fetch(`${API_URL}/inventories/users/${userId}`, {
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Error fetching inventories:', error);
-        }
+    const fetchUserInventories = async (): Promise<GetUsersInventoriesResponse | null> => {
+        const { data } = await sendRequest<GetUsersInventoriesResponse | null>({
+            method: "GET",
+            url: `/inventories/users/${userId}`
+        });
+        return data;
     }
 
-    const { data, isLoading, error, refetch } = useQuery<GetUsersInventoriesResponse>({
+    const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['inventories'],
         queryFn: fetchUserInventories,
-        staleTime: 5 * 60 * 1000,
         enabled: isLoaded && !!userId,
+        staleTime: 5 * 60 * 1000
     });
 
     return { 

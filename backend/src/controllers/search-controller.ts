@@ -12,7 +12,6 @@ export const getResults = async (req: Request, res: Response) => {
         }
 
         const tsvector = sql`setweight(to_tsvector('english', ${inventoriesTable.title}), 'A') || setweight(to_tsvector('english', ${inventoriesTable.description}), 'B')`;
-
         const tsquery = sql`plainto_tsquery('english', ${query})`;
 
         const results = await db

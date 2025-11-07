@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import db from "../config/database.js";
-import { inventoriesTable, itemsTable } from "../db/schema.js";
+import { itemsTable } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { checkInventoryExists } from "../utils/dbUtil.js";
 import { getAuth } from "@clerk/express";
@@ -30,7 +30,9 @@ export const getItemsForInventory = async (req: Request, res: Response) => {
 export const createItem = async (req: Request, res: Response) => {
     try {
         const { inventoryId } = req.params;
-        const itemData = req.body;
+        const { itemData } = req.body;
+
+        console.log('Creating item with data:', itemData);
 
         const exists = await checkInventoryExists(Number(inventoryId));
         if (!exists) {
@@ -38,15 +40,29 @@ export const createItem = async (req: Request, res: Response) => {
             return;
         }
 
+        const cleanedData: Record<string, any> = {};
+        
+        for (const [key, value] of Object.entries(itemData)) {
+            if (key.startsWith('c_number_') && value === '') {
+                cleanedData[key] = null;
+            }
+            else if (key.startsWith('c_boolean_') && value === '') {
+                cleanedData[key] = null;
+            }
+            else {
+                cleanedData[key] = value;
+            }
+        }
+
         const newItem = await db
             .insert(itemsTable)
             .values({
-                ...itemData,
+                ...cleanedData,
                 inventoryId: Number(inventoryId),
             })
             .returning();
 
-        res.status(201).json({ newItem });
+        res.status(201).json(newItem[0]);
     } catch (error) {
         console.error('Error creating item:', error);
         res.status(500).json({ message: "Internal server error" });
@@ -72,10 +88,24 @@ export const updateItem = async (req: Request, res: Response) => {
 
         // Check if user has write access to the inventory
 
+        const cleanedUpdates: Record<string, any> = {};
+        
+        for (const [key, value] of Object.entries(updates)) {
+            if (key.startsWith('c_number_') && value === '') {
+                cleanedUpdates[key] = null;
+            }
+            else if (key.startsWith('c_boolean_') && value === '') {
+                cleanedUpdates[key] = null;
+            }
+            else {
+                cleanedUpdates[key] = value;
+            }
+        }
+
         const updatedItem = await db
             .update(itemsTable)
             .set({
-                ...updates,
+                ...cleanedUpdates,
                 version: version + 1, 
                 updatedAt: new Date(),
             })
@@ -90,7 +120,7 @@ export const updateItem = async (req: Request, res: Response) => {
             return;
         }
 
-        res.status(200).json({ updatedItem });
+        res.status(200).json(updatedItem[0]);
     } catch (error) {
         console.error('Error updating item:', error);
         res.status(500).json({ message: "Internal server error" });

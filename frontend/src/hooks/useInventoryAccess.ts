@@ -1,5 +1,6 @@
 import type { AccessUser } from "@/types/models";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useApiRequest } from "./useApiRequest";
 
 interface UseInventoryAccessParams {
     inventoryId: number;
@@ -8,58 +9,44 @@ interface UseInventoryAccessParams {
 
 export function useInventoryAccess({ inventoryId, search }: UseInventoryAccessParams) {
     const queryClient = useQueryClient();
-    const API_URL = import.meta.env.VITE_BACKEND_URL;
+    const { sendRequest } = useApiRequest();
 
-    const fetchUsersWithWriteAccess = async (inventoryId: number) => {
-        const response = await fetch(`${API_URL}/access/inventories/${inventoryId}/users?search=${search}`, {
-            credentials: "include",
+    const fetchUsersWithWriteAccess = async (inventoryId: number): Promise<AccessUser[]> => {
+        const { data } = await sendRequest<AccessUser[]>({
+            method: "GET",
+            url: `/access/inventories/${inventoryId}/users?search=${search}`
         });
-        if (!response.ok) {
-            throw new Error("Failed to fetch users with write access");
-        }
-        return response.json();
+        return data ?? [];
     }
 
-    const addUserToWriteAccess = async ({ inventoryId, userId }: { inventoryId: number; userId: string }) => {
-        const response = await fetch(`${API_URL}/access/inventories/${inventoryId}/users`, {
+    const addUserToWriteAccess = async ({ inventoryId, userId }: { inventoryId: number; userId: string }): Promise<AccessUser | null> => {
+        const { data } = await sendRequest<AccessUser>({
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({ targetUserId: userId }),
+            url: `/access/inventories/${inventoryId}/users`,
+            body: { targetUserId: userId }
         });
-        if (!response.ok) {
-            throw new Error("Failed to add user to write access");
-        }
-        return response.json();
+        return data || null;
     }
 
-    const removeUsersFromWriteAccess = async ({ inventoryId, userIds }: { inventoryId: number; userIds: string[] }) => {
-        const response = await fetch(`${API_URL}/access/inventories/${inventoryId}/users`, {
+    const removeUsersFromWriteAccess = async ({ inventoryId, userIds }: { inventoryId: number; userIds: string[] }): Promise<void> => {
+        await sendRequest({
             method: "DELETE",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ userIds }),
+            url: `/access/inventories/${inventoryId}/users`,
+            body: { userIds }
         });
-        if (!response.ok) {
-            throw new Error("Failed to remove user from write access");
-        }
-        return userIds;
     }
 
     const { data: usersWithWriteAccess, isLoading, error, refetch } = useQuery<AccessUser[]>({
         queryKey: ["inventoryAccess", { inventoryId, search }],
         queryFn: () => fetchUsersWithWriteAccess(inventoryId),
-        staleTime: 5 * 60 * 1000,
         enabled: !!inventoryId && search !== undefined,
+        staleTime: 5 * 60 * 1000
     });
 
     const { mutateAsync: addUserToWriteAccessMutation } = useMutation({
         mutationFn: addUserToWriteAccess,
         onSuccess: (data) => {
+            if (!data) return;
             queryClient.setQueryData<AccessUser[]>(["inventoryAccess", { inventoryId, search }], (oldData) => {
                 if (oldData) {
                     return [...oldData, data];
@@ -71,10 +58,10 @@ export function useInventoryAccess({ inventoryId, search }: UseInventoryAccessPa
 
     const { mutateAsync: removeUsersFromWriteAccessMutation } = useMutation({
         mutationFn: removeUsersFromWriteAccess,
-        onSuccess: (userIds) => {
+        onSuccess: (_, params) => {
             queryClient.setQueryData<AccessUser[]>(["inventoryAccess", { inventoryId, search }], (oldData) => {
                 if (oldData) {
-                    return oldData.filter(user => !userIds.includes(user.id));
+                    return oldData.filter(user => !params.userIds.includes(user.id));
                 }
                 return [];
             });

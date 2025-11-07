@@ -1,28 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
+import { useApiRequest } from "./useApiRequest";
+import type { Category } from "@/types/models";
 
 export function useCategories() {
-    const API_URL = import.meta.env.VITE_BACKEND_URL;
+    const { sendRequest } = useApiRequest();
 
-    const fetchCategories = async () => {
-        const response = await fetch(`${API_URL}/categories`, {
-            credentials: 'include',
+    const fetchCategories = async (): Promise<Category[]> => {
+        const { data } = await sendRequest<Category[]>({
+            method: "GET",
+            url: "/categories"
         });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        return data;
+        return data ?? [];
     }
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['categories'],
         queryFn: fetchCategories,
-        staleTime: 10 * 60 * 1000,
+        staleTime: 10 * 60 * 1000
     })
 
     return {
         categories: data ?? [],
         isLoading,
-        error,
+        error
     };
 }

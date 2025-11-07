@@ -98,7 +98,7 @@ export default function Settings() {
                             <div className="flex flex-wrap max-w-[400px]">
                                 <Autocomplete 
                                     suggestions={tags.map((t: Tag) => t.name)}
-                                    value={tags}
+                                    value={tags.map(t => t.name)}
                                     onChange={(tags) => tags.forEach(handleAddTag)}
                                     placeholder="Add tags..."
                                     search={tagsSearchInput}

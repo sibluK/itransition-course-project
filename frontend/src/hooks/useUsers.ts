@@ -1,82 +1,47 @@
 import { mapClerkUserToUser } from "@/lib/utils";
 import type { User } from "@/types/models";
-import { useAuth } from "@clerk/clerk-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useApiRequest } from "./useApiRequest";
 
-export const useUsers = () => {
+export function useUsers() {
     const queryClient = useQueryClient();
-    const { getToken } = useAuth();
+    const { sendRequest } = useApiRequest();
 
-    const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000/api';
-
-    const fetchUsers = async () => {
-        const token = await getToken();
-
-        const response = await fetch(`${API_URL}/admin/users`, {
-            credentials: 'include',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            }
+    const fetchUsers = async (): Promise<User[]> => {
+        const { data } = await sendRequest<any>({
+            method: "GET",
+            url: "/admin/users"
         });
-        if (!response.ok) {
-            throw new Error('Failed to fetch users');
-        }
-        const data = await response.json();
-        console.log("Fetched users data:", data);
         return data.users.data.map((user: any) => {
             return mapClerkUserToUser(user);
         });
     };
 
-    const changeUsersStatus = async (userIds: string[], action: 'ban' | 'unban') => {
-        const response = await fetch(`${API_URL}/admin/users/${action}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ userIds }),
+    const changeUsersStatus = async (userIds: string[], action: 'ban' | 'unban'): Promise<void> => {
+        await sendRequest({
+            method: "POST",
+            url: `/admin/users/${action}`,
+            body: { userIds }
         });
-        if (!response.ok) {
-            throw new Error(`Failed to ${action} users`);
-        }
-        const data = await response.json();
-        return data;
     };
 
-    const changeUserRole = async (userIds: string[], newRole: string) => {
-        const response = await fetch(`${API_URL}/admin/users/role`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ userIds, newRole }),
+    const changeUserRole = async (userIds: string[], newRole: string): Promise<void> => {
+        await sendRequest({
+            method: "POST",
+            url: "/admin/users/role",
+            body: { userIds, newRole }
         });
-        if (!response.ok) {
-            throw new Error(`Failed to update user roles`);
-        }
-        const data = await response.json();
-        return data;
     };
 
-    const deleteUsers = async (userIds: string[]) => {
-        const response = await fetch(`${API_URL}/admin/users/delete`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ userIds }),
+    const deleteUsers = async (userIds: string[]): Promise<void> => {
+        await sendRequest({
+            method: "POST",
+            url: "/admin/users/delete",
+            body: { userIds }
         });
-        if (!response.ok) {
-            throw new Error(`Failed to delete users`);
-        }
-        const data = await response.json();
-        return data;
     }
 
-    const { data: users, isLoading, error } = useQuery<User[]>({
+    const { data: users, isLoading, error } = useQuery({
         queryKey: ['users'],
         queryFn: fetchUsers
     });

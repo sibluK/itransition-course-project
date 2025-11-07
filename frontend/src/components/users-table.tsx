@@ -31,7 +31,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { useState } from "react";
-import { uppercaseFirstLetter } from "@/utils/utils";
+import { uppercaseFirstLetter } from "@/lib/utils";
 import { useNavigate } from "react-router";
 import ConfirmDeleteUsersDialog from "./dialogs/confirm-delete-users";
 

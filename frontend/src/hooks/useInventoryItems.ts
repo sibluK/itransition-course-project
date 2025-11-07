@@ -1,81 +1,61 @@
 import type { Item } from "@/types/models";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useApiRequest } from "./useApiRequest";
 
 interface UseInventoryItems {
     inventoryId: number;
 }
 
 export function useInventoryItems({ inventoryId }: UseInventoryItems) {
-    const API_URL = import.meta.env.VITE_BACKEND_URL;
     const queryClient = useQueryClient();
+    const { sendRequest } = useApiRequest(); 
 
-    const getItems = async () => {
-        const response = await fetch(`${API_URL}/items/${inventoryId}`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch items');
-        }
-        const data = await response.json();
-        return data;
-    }
-
-    const createItem = async ({ itemData }: { itemData: Record<string, any> }) => {
-        const response = await fetch(`${API_URL}/items/${inventoryId}`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(itemData),
+    const getItems = async (): Promise<Item[]> => {
+        const { data } = await sendRequest<Item[]>({
+            method: "GET",
+            url: `/items/${inventoryId}`
         });
-        if (!response.ok) {
-            throw new Error('Failed to create item');
-        }
-        const data = await response.json();
-        return data;
-    }
+        return data ?? [];
+    };
 
-    const updateItem = async (itemId: number, updatedData: Partial<Item>, version: number) => {
-        const response = await fetch(`${API_URL}/items/${inventoryId}/${itemId}`, {
-            method: 'PATCH',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ ...updatedData, version }),
+    const createItem = async (itemData: Record<string, any>): Promise<Item | null> => {
+        const { data } = await sendRequest<Item>({
+            method: "POST",
+            url: `/items/${inventoryId}`,
+            body: { itemData }
         });
-        if (!response.ok) {
-            throw new Error('Failed to update item');
-        }
-        const data = await response.json();
         return data;
-    }
+    };
 
-    const deleteItem = async (itemId: number, version: number) => {
-        const response = await fetch(`${API_URL}/items/${inventoryId}/${itemId}`, {
-            method: 'DELETE',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(version),
+    const updateItem = async ({itemId, updatedData, version}: { itemId: number; updatedData: Partial<Item>; version: number }): Promise<Item | null> => {
+        const { data } = await sendRequest<Item>({
+            method: "PATCH",
+            url: `/items/${inventoryId}/${itemId}`,
+            body: { ...updatedData, version }
         });
-        if (!response.ok) {
-            throw new Error('Failed to delete item');
-        }
-        const data = await response.json();
         return data;
-    }
+    };
+
+    const deleteItem = async (itemId: number, version: number): Promise<void> => {
+        await sendRequest<void>({
+            method: "DELETE",
+            url: `/items/${inventoryId}/${itemId}`,
+            body: { version }
+        });
+    };
 
     const { data, isLoading, error } = useQuery<Item[]>({
         queryKey: ['inventoryItems', { inventoryId }],
         queryFn: getItems,
         enabled: !!inventoryId,
+        staleTime: 1 * 60 * 1000
     });
 
     const { mutateAsync: createItemMutation } = useMutation({
-        mutationFn: ({ itemData }: { itemData: Record<string, any> }) => createItem({ itemData }),
-        onSuccess: (newItem: Item) => {
-            queryClient.setQueryData(['inventoryItems', { inventoryId }], (oldData: Item[] | undefined) => {
+        mutationFn: (itemData: Record<string, any>) => createItem(itemData),
+        onSuccess: (newItem) => {
+            if (!newItem) return;
+            queryClient.setQueryData(['inventoryItems', { inventoryId }], (oldData: Item[]) => {
                 if (!oldData) return [newItem];
                 return [...oldData, newItem];
             });
@@ -83,9 +63,10 @@ export function useInventoryItems({ inventoryId }: UseInventoryItems) {
     });
 
     const { mutateAsync: updateItemMutation } = useMutation({
-        mutationFn: ({ itemId, updatedData, version }: { itemId: number;  updatedData: Partial<Item>, version: number }) => updateItem(itemId, updatedData, version),
-        onSuccess: (updatedItem: Item) => {
-            queryClient.setQueryData(['inventoryItems', { inventoryId }], (oldData: Item[] | undefined) => {
+        mutationFn: ({ itemId, updatedData, version }: { itemId: number;  updatedData: Partial<Item>, version: number }) => updateItem( {itemId, updatedData, version} ),
+        onSuccess: (updatedItem) => {
+            if (!updatedItem) return;
+            queryClient.setQueryData(['inventoryItems', { inventoryId }], (oldData: Item[]) => {
                 if (!oldData) return oldData;
                 return oldData.map(item => item.id === updatedItem.id ? updatedItem : item);
             });
@@ -95,7 +76,7 @@ export function useInventoryItems({ inventoryId }: UseInventoryItems) {
     const { mutateAsync: deleteItemMutation } = useMutation({
         mutationFn: ({ itemId, version }: { itemId: number; version: number }) => deleteItem(itemId, version),
         onSuccess: (_, { itemId }) => {
-            queryClient.setQueryData(['inventoryItems', { inventoryId }], (oldData: Item[] | undefined) => {
+            queryClient.setQueryData(['inventoryItems', { inventoryId }], (oldData: Item[]) => {
                 if (!oldData) return oldData;
                 return oldData.filter(item => item.id !== itemId);
             });

@@ -18,3 +18,7 @@ export function mapClerkUserToUser(clerkUser: any): User {
         status: clerkUser.banned ? 'blocked' : 'active',
     };
 }
+
+export function uppercaseFirstLetter(string: string): string {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}

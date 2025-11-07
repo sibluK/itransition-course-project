@@ -1,21 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
+import { useApiRequest } from "./useApiRequest";
+import type { Tag } from "@/types/models";
 
 interface UseTagsProps {
     search: string;
 }
 
 export function useTags({ search }: UseTagsProps) {
-    const API_URL = import.meta.env.VITE_BACKEND_URL;
+    const { sendRequest } = useApiRequest();
 
     const fetchTags = async () => {
-        const response = await fetch(`${API_URL}/tags?search=${search}`, {
-            credentials: 'include',
+        const { data } = await sendRequest<Tag[]>({
+            method: "GET",
+            url: `/tags?search=${encodeURIComponent(search)}`
         });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        return data;
+        return data ?? [];
     }
 
     const { data, isLoading, error } = useQuery({

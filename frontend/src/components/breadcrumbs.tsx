@@ -6,7 +6,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { uppercaseFirstLetter } from "@/utils/utils";
+import { uppercaseFirstLetter } from "@/lib/utils";
 import React, { useMemo } from "react";
 import { useLocation } from "react-router";
 

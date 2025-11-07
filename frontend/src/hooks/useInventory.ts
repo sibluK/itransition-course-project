@@ -1,5 +1,6 @@
 import type { Inventory, Tag } from "@/types/models";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useApiRequest } from "./useApiRequest";
 
 interface UseInventoryProps {
     inventoryId: number;
@@ -13,34 +14,29 @@ interface InventoryResponse {
 
 export function useInventory({ inventoryId }: UseInventoryProps) {
     const queryClient = useQueryClient();
-    const API_URL = import.meta.env.VITE_BACKEND_URL;
+    const { sendRequest } = useApiRequest();
     
-    const fetchInventory = async () => {
-        const response = await fetch(`${API_URL}/inventories/${inventoryId}`, {
-            credentials: 'include',
+    const fetchInventory = async (): Promise<InventoryResponse | null> => {
+        const { data } = await sendRequest<InventoryResponse>({
+            method: "GET",
+            url: `/inventories/${inventoryId}`,
         });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
         return data;
     }
 
-    const deleteInventory = async () => {
-        const response = await fetch(`${API_URL}/inventories/${inventoryId}`, {
-            method: 'DELETE',
-            credentials: 'include',
+    const deleteInventory = async (): Promise<void> => {
+        await sendRequest({
+            method: "DELETE",
+            url: `/inventories/${inventoryId}`
         });
-        if (!response.ok) {
-            throw new Error('Failed to delete inventory');
-        }
-        return true;
     }
 
-    const { data, isLoading, error } = useQuery<InventoryResponse>({
+    const { data, isLoading, error } = useQuery<InventoryResponse | null>({
         queryKey: ['inventory', { inventoryId }],
         queryFn: fetchInventory,
         staleTime: 10 * 60 * 1000,
+        refetchOnWindowFocus: false,
+        refetchOnMount: false
     });
 
     const { mutateAsync: deleteInventoryMutation } = useMutation({
@@ -58,6 +54,4 @@ export function useInventory({ inventoryId }: UseInventoryProps) {
         error,
         deleteInventory: deleteInventoryMutation,
     };
-
-
 }

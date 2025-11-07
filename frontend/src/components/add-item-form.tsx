@@ -56,7 +56,7 @@ export function AddItemForm({ inventoryId, item, trigger, open, onOpenChange }: 
             if (isEditing && item) {
                 await updateItem({ itemId: item.id, updatedData: itemData, version: item.version });
             } else {
-                await createItem({ itemData });
+                await createItem(itemData);
             }
             handleClose();
         } catch (error) {

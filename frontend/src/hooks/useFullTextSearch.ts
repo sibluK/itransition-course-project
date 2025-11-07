@@ -1,29 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
+import { useApiRequest } from "./useApiRequest";
+import type { Inventory } from "@/types/models";
 
 interface UseFullTextSearchProps {
     query: string;
 }
 
 export function useFullTextSearch({ query }: UseFullTextSearchProps) {
-    const API_URL = import.meta.env.VITE_BACKEND_URL;
+    const { sendRequest } = useApiRequest();
 
-    const search = async () => {
-        if (!query) return;
-
-        const response = await fetch(`${API_URL}/search?q=${encodeURIComponent(query)}`);
-
-        if (!response.ok) {
-            throw new Error("Network response was not ok");
-        }
-
-        const data = await response.json();
-        return data;
-    }
+    const search = async (): Promise<Inventory[]> => {
+        if (!query) return [];
+        const { data } = await sendRequest<Inventory[]>({
+            method: "GET",
+            url: `/search?q=${encodeURIComponent(query)}`
+        });
+        return data ?? [];
+    };
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['fullTextSearch', { query }],
         queryFn: search,
         enabled: query.length > 0,
+        staleTime: 1 * 60 * 1000
     });
 
     return { data, isLoading, error };

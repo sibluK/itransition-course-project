@@ -1,6 +1,6 @@
-import { useAuth } from "@clerk/clerk-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
+import { useApiRequest } from "./useApiRequest";
 
 export const CreateInventorySchema = z.object({
     title: z
@@ -29,34 +29,22 @@ export const CreateInventorySchema = z.object({
 
 export type CreateInventoryData = z.infer<typeof CreateInventorySchema>;
 
-export const useCreateInventory = () => {
+export function useCreateInventory() {
     const queryClient = useQueryClient();
-    const { userId } = useAuth();
-    const API_URL = import.meta.env.VITE_BACKEND_URL;
+    const { sendRequest } = useApiRequest();
 
-    const createInventory = async (data: CreateInventoryData) => {
-        if (!userId) return;
+    const createInventory = async (data: CreateInventoryData): Promise<void> => {
         const formData = new FormData();
         formData.append('title', data.title);
         if (data.description) formData.append('description', data.description);
         if (data.categoryId) formData.append('categoryId', data.categoryId.toString());
         if (data.image) formData.append('image', data.image);
         data.tags.forEach(tag => formData.append('tags[]', tag));
-
-        try {
-            const response = await fetch(`${API_URL}/inventories`, {
-                credentials: 'include',
-                method: 'POST',
-                body: formData,
-            });
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Error creating inventory:', error);
-        }
+        await sendRequest({
+            method: "POST",
+            url: "/inventories",
+            formData: formData
+        });
     }
 
     const { mutateAsync: createInventoryMutation, isPending, error } = useMutation({

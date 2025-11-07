@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
 import { toast } from "sonner";
+import { useApiRequest } from "@/hooks/useApiRequest";
 
 interface InventoryProviderProps {
     children: React.ReactNode;
@@ -23,49 +24,65 @@ interface InventoryUpdatePayload {
 const InventoryContext = createContext<{
     data: InventoryUpdatePayload;
     updateData: (newData: Partial<InventoryUpdatePayload>) => void;
-    uploadImage: (imageFile: File) => Promise<void>;
+    uploadImage: (imageFile: File) => void;
     isSaving: boolean;
     hasChanges: boolean;
 } | null>(null);
 
 export function InventoryProvider({ children, initialData, inventoryId }: InventoryProviderProps) {
-    const [data, setData] = useState<InventoryUpdatePayload>({...initialData, tags: initialData.tags || []});
-    const [hasChanges, setHasChanges] = useState(false);
     const queryClient = useQueryClient();
+    const { sendRequest } = useApiRequest();
+
+    const [data, setData] = useState<InventoryUpdatePayload>(() => ({
+        ...initialData, 
+        tags: initialData.tags || []
+    }));
+    const [hasChanges, setHasChanges] = useState(false);
     const [value] = useDebounce(data, 1000);
-    const API_URL = import.meta.env.VITE_BACKEND_URL;
+
+    useEffect(() => {
+        if (initialData.version !== data.version) {
+            setData({ ...initialData, tags: initialData.tags || [] });
+            setHasChanges(false);
+        }
+    }, [initialData]);
 
     const sendUpdateRequest = async (updates: Partial<InventoryUpdatePayload>) => {
-        const response = await fetch(`${API_URL}/inventories/${inventoryId}`, {
+        const { data: responseData, code } = await sendRequest<InventoryUpdatePayload>({
             method: "PATCH",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(updates)
+            url: `/inventories/${inventoryId}`,
+            body: updates
         });
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw { status: response.status, message: errorData.error || 'Failed to update inventory' };
+
+        if (code !== 200 || !responseData) {
+            throw { 
+                status: code, 
+                message: 'Failed to update inventory' 
+            };
         }
-        return response.json();
-    }
+
+        return responseData;
+    };
 
     const sendUpdateImage = async (imageFile: File) => {
         const formData = new FormData();
         formData.append("image", imageFile);
         formData.append("version", String(data.version));
 
-        const response = await fetch(`${API_URL}/inventories/${inventoryId}`, {
+        const { data: responseData, code } = await sendRequest<InventoryUpdatePayload>({
             method: "PATCH",
-            credentials: "include",
-            body: formData,
+            url: `/inventories/${inventoryId}`,
+            formData
         });
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw { status: response.status, message: errorData.error || 'Failed to upload image' };
+
+        if (code !== 200 || !responseData) {
+            throw { 
+                status: code, 
+                message: 'Failed to upload image' 
+            };
         }
-        return response.json();
+
+        return responseData;
     };
 
     const updateData = (updates: Partial<InventoryUpdatePayload>) => {
@@ -91,7 +108,16 @@ export function InventoryProvider({ children, initialData, inventoryId }: Invent
                         onClick: () => queryClient.invalidateQueries({ queryKey: ["inventory", { inventoryId }]})
                     }
                 })
+            } else {
+                toast("Unable to save changes", {
+                    description: "Something went wrong. Plasee reset the inventory information changes",
+                    action: {
+                        label: "Reset",
+                        onClick: () => queryClient.invalidateQueries({ queryKey: ["inventory", { inventoryId }]})
+                    }
+                })
             }
+            
         }
     });
 
@@ -115,11 +141,6 @@ export function InventoryProvider({ children, initialData, inventoryId }: Invent
 
         return () => clearInterval(interval);
     }, [value, hasChanges, isPending, saveInventory]);
-
-    useEffect(() => {
-        setData(initialData);
-        setHasChanges(false);
-    }, [initialData]);
 
     return (
         <InventoryContext.Provider value={{ data, updateData, uploadImage, isSaving: isPending, hasChanges }}>
