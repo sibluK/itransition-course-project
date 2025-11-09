@@ -1,37 +1,18 @@
 import { clerkClient, getAuth } from "@clerk/express";
 import type { Request, Response } from "express";
-import db from "../config/database.js";
-import { inventoriesTable, inventoryWriteAccessTable } from "../db/schema.js";
+import db from "../configs/database.js";
+import { inventoryWriteAccessTable } from "../db/schema.js";
 import { eq, and, inArray } from "drizzle-orm";
 
 export const getUsersWithWriteAccessForInventory = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { inventoryId } = req.params;
         const { search } = req.query;
-        const { userId } = getAuth(req);
-
-        const inventoryResult = await db
-            .select()
-            .from(inventoriesTable)
-            .where(eq(inventoriesTable.id, Number(inventoryId)))
-            .limit(1)
-
-        const inventory = inventoryResult[0];
-
-        if (!inventory) {
-            res.status(404).json({ message: "Inventory not found" });
-            return;
-        }
-
-        if (inventory.creatorId !== userId) {
-            res.status(403).json({ message: "Forbidden" });
-            return;
-        }
+        const inventory = req.inventory;
 
         const writeAccessUserIds = await db
             .select({ userId: inventoryWriteAccessTable.userId })
             .from(inventoryWriteAccessTable)
-            .where(eq(inventoryWriteAccessTable.inventoryId, Number(inventoryId)));
+            .where(eq(inventoryWriteAccessTable.inventoryId, Number(inventory?.id)));
 
         const userIds = writeAccessUserIds.map((entry) => String(entry.userId));
 
@@ -60,35 +41,16 @@ export const getUsersWithWriteAccessForInventory = async (req: Request, res: Res
 
 export const addWriteAccessToUserForInventory = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { inventoryId } = req.params;
         const { userId } = getAuth(req);
         const { targetUserId } = req.body;
+        const inventory = req.inventory;
 
         if (targetUserId === userId) {
             res.status(400).json({ message: "Cannot add write access to the inventory owner" });
             return;
         }
 
-        const inventoryResult = await db
-            .select()
-            .from(inventoriesTable)
-            .where(eq(inventoriesTable.id, Number(inventoryId)))
-            .limit(1)
-
-        const inventory = inventoryResult[0];
-
-        if (!inventory) {
-            res.status(404).json({ message: "Inventory not found" });
-            return;
-        }
-
-        if (inventory.creatorId !== userId) {
-            res.status(403).json({ message: "Forbidden" });
-            return;
-        }
-
         const user = await clerkClient.users.getUser(targetUserId);
-
         if (!user) {
             res.status(404).json({ message: "User not found" });
             return;
@@ -98,7 +60,7 @@ export const addWriteAccessToUserForInventory = async (req: Request, res: Respon
             .select()
             .from(inventoryWriteAccessTable)
             .where(and(
-                eq(inventoryWriteAccessTable.inventoryId, Number(inventoryId)),
+                eq(inventoryWriteAccessTable.inventoryId, Number(inventory?.id)),
                 eq(inventoryWriteAccessTable.userId, targetUserId)
             ))
             .limit(1);
@@ -111,7 +73,7 @@ export const addWriteAccessToUserForInventory = async (req: Request, res: Respon
         await db
             .insert(inventoryWriteAccessTable)
             .values({
-                inventoryId: Number(inventoryId),
+                inventoryId: Number(inventory?.id),
                 userId: targetUserId,
             });
         
@@ -129,9 +91,9 @@ export const addWriteAccessToUserForInventory = async (req: Request, res: Respon
 
 export const removeWriteAccessFromUsersForInventory = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { inventoryId } = req.params;
         const { userId } = getAuth(req);
         const { userIds } = req.body;
+        const inventory = req.inventory;
 
         if (userIds.length === 0 || !Array.isArray(userIds)) {
             res.status(400).json({ message: "Atleast 1 userId is required" });
@@ -143,29 +105,11 @@ export const removeWriteAccessFromUsersForInventory = async (req: Request, res: 
             return;
         }
 
-        const inventoryResult = await db
-            .select()
-            .from(inventoriesTable)
-            .where(eq(inventoriesTable.id, Number(inventoryId)))
-            .limit(1)
-
-        const inventory = inventoryResult[0];
-
-        if (!inventory) {
-            res.status(404).json({ message: "Inventory not found" });
-            return;
-        }
-
-        if (inventory.creatorId !== userId) {
-            res.status(403).json({ message: "Forbidden" });
-            return;
-        }
-
         const existingEntries = await db
             .select({ userIds: inventoryWriteAccessTable.userId })
             .from(inventoryWriteAccessTable)
             .where(and(
-                eq(inventoryWriteAccessTable.inventoryId, Number(inventoryId)),
+                eq(inventoryWriteAccessTable.inventoryId, Number(inventory?.id)),
                 inArray(inventoryWriteAccessTable.userId, userIds)
             ));
 
@@ -177,12 +121,11 @@ export const removeWriteAccessFromUsersForInventory = async (req: Request, res: 
         await db
             .delete(inventoryWriteAccessTable)
             .where(and(
-                eq(inventoryWriteAccessTable.inventoryId, Number(inventoryId)),
+                eq(inventoryWriteAccessTable.inventoryId, Number(inventory?.id)),
                 inArray(inventoryWriteAccessTable.userId, userIds)
             ));
 
         res.status(204).json({ message: "Write access removed successfully" });
-
     } catch (error) {
         console.error("Error removing write access from user:", error);
         res.status(500).json({ message: "Internal server error" });

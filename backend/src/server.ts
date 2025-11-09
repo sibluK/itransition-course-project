@@ -1,9 +1,9 @@
-import config from "./config/config.js";
+import config from "./configs/config.js";
 import app from "./index.js";
-import db from "./config/database.js";
+import db from "./configs/database.js";
 import { sql } from "drizzle-orm";
 import { createServer } from "http";
-import { initializeSocket } from "./config/socket.js";
+import { initializeSocket } from "./configs/socket.js";
 
 const server = createServer(app);
 

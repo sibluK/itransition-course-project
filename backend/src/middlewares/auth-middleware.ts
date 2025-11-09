@@ -1,5 +1,6 @@
 import { getAuth, clerkClient } from "@clerk/express"
 import type { Request, Response, NextFunction } from 'express';
+import { checkWriteAccess } from "../utils/dbUtil.js";
 
 export const requireRole = (requiredRole: string) => {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -49,6 +50,39 @@ export const checkStatus = () => {
                 res.status(403).json({ error: 'User is blocked' });
                 return;
             }
+            next();
+        } catch (error) {
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+}
+
+export const hasWriteAccess = (action: "private" | "public" = "private") => {
+    return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const { userId } = getAuth(req);
+            const inventory = req.inventory;
+            
+            let writeAccess = false;
+
+            if (inventory!.creatorId === userId) {
+                writeAccess = true;
+            } else if (action === "public" && inventory!.isPublic) {
+                writeAccess = true;
+            } else {
+                writeAccess = await checkWriteAccess(Number(inventory?.id), String(userId));
+            }
+            
+            const user = await clerkClient.users.getUser(userId!);
+            if (user.publicMetadata.role === 'admin') {
+                writeAccess = true;
+            }
+
+            if (!writeAccess) {
+                res.status(403).json({ error: 'Forbidden' });
+                return;
+            }
+
             next();
         } catch (error) {
             res.status(500).json({ error: 'Internal Server Error' });

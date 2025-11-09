@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Button } from "./ui/button";
 import { Trash } from "lucide-react";
 import { AddItemForm } from "./add-item-form";
+import { useInventoryContext } from "@/contexts/inventory-provider";
 
 interface ItemsTableProps {
     data: Item[];
@@ -18,6 +19,7 @@ export function ItemsTable({ data, columns, inventoryId }: ItemsTableProps) {
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [rowSelection, setRowSelection] = useState({});
     const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+    const { writeAccess } = useInventoryContext();
 
     const table = useReactTable({
         data,
@@ -41,17 +43,16 @@ export function ItemsTable({ data, columns, inventoryId }: ItemsTableProps) {
 
     return (
         <div className="overflow-hidden rounded-md border">
-            <div className="flex py-4 px-4">
-                <div className="flex gap-2">
-                    <AddItemForm 
-                        inventoryId={inventoryId}
-                    />
-                    <Button variant="destructive" disabled={table.getSelectedRowModel().rows.length === 0}>
-                        <Trash className="h-4 w-4" />
-                        Delete Items
-                    </Button>
+            {writeAccess && (
+                <div className="flex py-4 px-4">
+                    <div className="flex gap-2">
+                        <Button variant="destructive" disabled={table.getSelectedRowModel().rows.length === 0}>
+                            <Trash className="h-4 w-4" />
+                            Delete Items
+                        </Button>
+                    </div>
                 </div>
-            </div>
+            )}
             <Table>
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (

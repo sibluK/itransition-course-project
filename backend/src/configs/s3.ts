@@ -43,14 +43,12 @@ export const uploadFileToS3 = async (buffer: Buffer, contentType?: string) => {
 export const deleteFileFromS3 = async (url: string) => {
     if (!url) return;
     try {
-        const params = {
-            Bucket: bucketName!,
-            Key: extractKeyFromUrl(url)!,
-        };
+        const params = { Bucket: bucketName!, Key: extractKeyFromUrl(url)! };
         const command = new DeleteObjectCommand(params);
         await s3Client.send(command);
     } catch (error) {
         console.error("Error deleting file from S3:", error);
+        throw error;
     }
 }
 

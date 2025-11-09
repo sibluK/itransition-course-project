@@ -1,28 +1,18 @@
 import type { Request, Response } from "express";
-import db from "../config/database.js";
+import db from "../configs/database.js";
 import { discussionPostsTable } from "../db/schema.js";
 import { eq, asc } from "drizzle-orm";
-import { checkInventoryExists } from "../utils/dbUtil.js";
 import { clerkClient, getAuth } from "@clerk/express";
 import { io } from "../server.js";
 
 export const getInventoryDiscussionPosts = async(req: Request, res: Response): Promise<void> => {
     try {
-        const { inventoryId } = req.params;
-
-        const inventoryExists = await checkInventoryExists(Number(inventoryId));
-
-        if (!inventoryExists) {
-            res.status(404).json({ message: "Inventory not found." });
-            return;
-        }
-
+        const inventory = req.inventory;
         const posts = await db
             .select()
             .from(discussionPostsTable)
-            .where(eq(discussionPostsTable.inventoryId, Number(inventoryId)))
+            .where(eq(discussionPostsTable.inventoryId, Number(inventory?.id)))
             .orderBy(asc(discussionPostsTable.createdAt));
-
         res.status(200).json(posts);
     } catch (error) {
         console.error("Error fetching discussion posts:", error);
@@ -32,7 +22,7 @@ export const getInventoryDiscussionPosts = async(req: Request, res: Response): P
 
 export const createDiscussionPost = async(req: Request, res: Response): Promise<void> => {
     try {
-        const { inventoryId } = req.params;
+        const inventory = req.inventory;
         const { content } = req.body;
         const { userId } = getAuth(req);
 
@@ -41,19 +31,12 @@ export const createDiscussionPost = async(req: Request, res: Response): Promise<
             return;
         }
 
-        const inventoryExists = await checkInventoryExists(Number(inventoryId));
-
-        if (!inventoryExists) {
-            res.status(404).json({ message: "Inventory not found." });
-            return;
-        }
-
         const user = await clerkClient.users.getUser(userId!);
 
         const newPost = await db
             .insert(discussionPostsTable)
             .values({
-                inventoryId: Number(inventoryId),
+                inventoryId: Number(inventory?.id),
                 userId: userId!,
                 userEmail: user.emailAddresses[0]?.emailAddress || "unknown",
                 userImageUrl: user.imageUrl || null,
@@ -61,7 +44,7 @@ export const createDiscussionPost = async(req: Request, res: Response): Promise<
             })
             .returning();
 
-        io.to(`inventory_${inventoryId}`).emit("new_post", newPost[0]);
+        io.to(`inventory_${inventory?.id}`).emit("new_post", newPost[0]);
 
         res.status(201).json(newPost[0]);
     } catch (error) {
@@ -72,15 +55,8 @@ export const createDiscussionPost = async(req: Request, res: Response): Promise<
 
 export const deleteDiscussionPost = async(req: Request, res: Response): Promise<void> => {
     try {
-        const { inventoryId, postId } = req.params;
+        const { postId } = req.params;
         const { userId } = getAuth(req);
-
-        const inventoryExists = await checkInventoryExists(Number(inventoryId));
-
-        if (!inventoryExists) {
-            res.status(404).json({ message: "Inventory not found." });
-            return;
-        }
 
         const post = await db
             .select()
@@ -93,7 +69,10 @@ export const deleteDiscussionPost = async(req: Request, res: Response): Promise<
             return;
         }
 
-        if (post[0]?.userId !== userId) {
+        const user = await clerkClient.users.getUser(userId!);
+        const isAdmin = user.publicMetadata.role === 'admin';
+
+        if (post[0]?.userId !== userId && !isAdmin) {
             res.status(403).json({ message: "You do not have permission to delete this post." });
             return;
         }

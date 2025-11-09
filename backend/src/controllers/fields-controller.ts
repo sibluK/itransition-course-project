@@ -1,32 +1,19 @@
 import type { Request, Response } from "express";
 import { checkInventoryExists } from "../utils/dbUtil.js";
 import { customFieldsTable } from "../db/schema.js";
-import db from "../config/database.js";
+import db from "../configs/database.js";
 import { eq, and } from "drizzle-orm";
 
 type FieldType = "sl_string" | "ml_string" | "number" | "link" | "boolean";
 
 export const getCustomFieldsByInventoryId = async (req: Request, res: Response) => {
     try {
-        const inventoryId = Number(req.params.inventoryId);
-        if (isNaN(inventoryId)) {
-            return res.status(400).json({ message: "Invalid inventory ID" });
-        }
-
-        const exists = await checkInventoryExists(inventoryId);
-        if (!exists) {
-            return res.status(404).json({ message: "Inventory not found" });
-        }
-
+        const inventory = req.inventory;
         const customFields = await db
             .select()
             .from(customFieldsTable)
-            .where(
-                eq(customFieldsTable.inventoryId, inventoryId),
-            );
-
+            .where(eq(customFieldsTable.inventoryId, inventory!.id));
         res.json(customFields);
-
     } catch (error) {
         console.error("Error fetching custom fields:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -35,16 +22,7 @@ export const getCustomFieldsByInventoryId = async (req: Request, res: Response) 
 
 export const updateCustomFieldsForInventory = async (req: Request, res: Response) => {
     try {
-        const inventoryId = Number(req.params.inventoryId);
-        if (isNaN(inventoryId)) {
-            return res.status(400).json({ message: "Invalid inventory ID" });
-        }
-
-        const exists = await checkInventoryExists(inventoryId);
-        if (!exists) {
-            return res.status(404).json({ message: "Inventory not found" });
-        }
-
+        const inventory = req.inventory;
         const updates: Array<{
             fieldKey: string;
             label?: string;
@@ -76,7 +54,7 @@ export const updateCustomFieldsForInventory = async (req: Request, res: Response
                 .select()
                 .from(customFieldsTable)
                 .where(and(
-                    eq(customFieldsTable.inventoryId, inventoryId),
+                    eq(customFieldsTable.inventoryId, inventory!.id),
                     eq(customFieldsTable.fieldKey, fieldKey)
                 ))
                 .limit(1);
@@ -91,14 +69,14 @@ export const updateCustomFieldsForInventory = async (req: Request, res: Response
                     .update(customFieldsTable)
                     .set(updateData)
                     .where(and(
-                        eq(customFieldsTable.inventoryId, inventoryId),
+                        eq(customFieldsTable.inventoryId, inventory!.id),
                         eq(customFieldsTable.fieldKey, fieldKey)
                     ));
             } else if (isEnabled) {
                 await db
                     .insert(customFieldsTable)
                     .values({
-                        inventoryId,
+                        inventoryId: inventory!.id,
                         fieldKey,
                         fieldType,
                         label: label || '',

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { checkStatus, requireRole } from "../middleware/auth-middleware.js";
+import { checkStatus, requireRole } from "../middlewares/auth-middleware.js";
 import { requireAuth } from "@clerk/express";
 import { banUsers, deleteUsers, getUsers, unbanUsers, updateUserRole } from "../controllers/admin-controller.js";
 

@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { getUserProfile, getUsers } from "../controllers/user-controller.js";
+import { getUsers } from "../controllers/user-controller.js";
 import { requireAuth } from "@clerk/express";
+import { checkStatus } from "../middlewares/auth-middleware.js";
 
 const router = Router();
 
-router.get("/profile", requireAuth(), getUserProfile);
-router.get("/", requireAuth(), getUsers);
+router.get("/", requireAuth(), checkStatus(), getUsers);
 
 export default router;
