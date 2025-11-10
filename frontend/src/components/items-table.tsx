@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { Button } from "./ui/button";
 import { Trash } from "lucide-react";
-import { AddItemForm } from "./add-item-form";
 import { useInventoryContext } from "@/contexts/inventory-provider";
 
 interface ItemsTableProps {
@@ -14,7 +13,7 @@ interface ItemsTableProps {
     inventoryId: number;
 }
 
-export function ItemsTable({ data, columns, inventoryId }: ItemsTableProps) {
+export function ItemsTable({ data, columns }: ItemsTableProps) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [rowSelection, setRowSelection] = useState({});
