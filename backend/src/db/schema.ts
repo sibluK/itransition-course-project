@@ -1,6 +1,5 @@
 import { boolean, integer, pgTable, varchar, index, numeric, pgEnum, timestamp, uniqueIndex, text } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { version } from "os";
 
 export const fieldTypeEnum = pgEnum('field_type', [
     'sl_string',

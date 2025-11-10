@@ -6,6 +6,8 @@ import { InventoryProvider, useInventoryContext } from "@/contexts/inventory-pro
 import { Spinner } from "@/components/ui/spinner";
 import { AlertTriangle, Check } from "lucide-react";
 import { InventorySocketProvider } from "@/contexts/inventory-socket-provider";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@clerk/clerk-react";
 
 const tabs = [
     { value: 'items', label: 'Items' },
@@ -22,6 +24,9 @@ export default function Inventory() {
     const { inventory, tags, writeAccess, isLoading, error } = useInventory({ inventoryId: Number(inventoryId) });
     const navigate = useNavigate();
     const location = useLocation();
+    const { userId } = useAuth();
+    const isOwner = inventory?.creatorId === userId;
+    const isAdmin = useUserRole() === 'admin';
 
     const activeTab = useMemo(() => {
         const segments = location.pathname.split('/');
@@ -41,22 +46,30 @@ export default function Inventory() {
     }
 
     return (
-        <InventoryProvider initialData={{...inventory, tags: tags.map(t => t.name)}} inventoryId={Number(inventoryId)}>
+        <InventoryProvider initialData={{...inventory, tags: tags.map(t => t.name)}} inventoryId={Number(inventoryId)} writeAccess={writeAccess}>
             <InventorySocketProvider inventoryId={Number(inventoryId)} hasWriteAccess={writeAccess}>    
                 <div>
                     <div className="flex items-center gap-4 mb-4 justify-between lg:justify-start flex-wrap">
                         <h1 className="text-2xl lg:text-4xl font-bold text-nowrap">{inventory.title}</h1>
-                        <AutoSaveStatus />
+                        {(isOwner || isAdmin) && <AutoSaveStatus />}
                     </div>
-                    <Tabs value={activeTab} onValueChange={handleTabChange} className="overflow-x-auto mb-5">
-                        <TabsList className="flex gap-1 justify-start">
-                            {tabs.map((tab) => (
-                                <TabsTrigger key={tab.value} value={tab.value} className="p-4">
-                                    {tab.label}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                    </Tabs>
+                    {writeAccess && (
+                        <Tabs value={activeTab} onValueChange={handleTabChange} className="overflow-x-auto mb-5">
+                            <TabsList className="flex gap-1 justify-start">
+                                {tabs.map((tab) => {
+                                    if (!(isOwner || isAdmin) && tab.value !== 'items' && tab.value !== 'discussions') {
+                                        return null;
+                                    }
+
+                                    return (
+                                        <TabsTrigger key={tab.value} value={tab.value} className="p-4">
+                                            {tab.label}
+                                        </TabsTrigger>
+                                    );  
+                                })}
+                            </TabsList>
+                        </Tabs>
+                    )}
                     <Outlet />
                 </div>
             </InventorySocketProvider>

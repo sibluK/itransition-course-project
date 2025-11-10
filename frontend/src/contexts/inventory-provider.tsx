@@ -8,6 +8,7 @@ interface InventoryProviderProps {
     children: React.ReactNode;
     initialData: InventoryUpdatePayload;
     inventoryId: number;
+    writeAccess: boolean;
 }
 
 interface InventoryUpdatePayload {
@@ -27,9 +28,10 @@ const InventoryContext = createContext<{
     uploadImage: (imageFile: File) => void;
     isSaving: boolean;
     hasChanges: boolean;
+    writeAccess: boolean;
 } | null>(null);
 
-export function InventoryProvider({ children, initialData, inventoryId }: InventoryProviderProps) {
+export function InventoryProvider({ children, initialData, inventoryId, writeAccess }: InventoryProviderProps) {
     const queryClient = useQueryClient();
     const { sendRequest } = useApiRequest();
 
@@ -143,7 +145,7 @@ export function InventoryProvider({ children, initialData, inventoryId }: Invent
     }, [value, hasChanges, isPending, saveInventory]);
 
     return (
-        <InventoryContext.Provider value={{ data, updateData, uploadImage, isSaving: isPending, hasChanges }}>
+        <InventoryContext.Provider value={{ data, updateData, uploadImage, isSaving: isPending, hasChanges, writeAccess }}>
             {children}
         </InventoryContext.Provider>
     );

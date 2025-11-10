@@ -44,7 +44,7 @@ export const banUsers = async (req: Request, res: Response): Promise<void> => {
     try {
         const { userIds } = req.body;
         if (!Array.isArray(userIds)) {
-            res.status(400).json({ error: 'User IDs is required' });
+            res.status(400).json({ error: 'User IDs are required' });
             return;
         }
         await Promise.all(userIds.map(id => banSignleUser(id)));
@@ -62,7 +62,7 @@ export const unbanUsers = async (req: Request, res: Response): Promise<void> => 
     try {
         const { userIds } = req.body;
         if (!Array.isArray(userIds)) {
-            res.status(400).json({ error: 'User IDs is required' });
+            res.status(400).json({ error: 'User IDs are required' });
             return;
         }
         await Promise.all(userIds.map(id => unbanSingleUser(id)));
@@ -80,7 +80,7 @@ export const deleteUsers = async (req: Request, res: Response): Promise<void> =>
     try {
         const { userIds } = req.body;
         if (!Array.isArray(userIds)) {
-            res.status(400).json({ error: 'User IDs is required' });
+            res.status(400).json({ error: 'User IDs are required' });
             return;
         }
         await Promise.all(userIds.map(id => deleteSingleUser(id)));

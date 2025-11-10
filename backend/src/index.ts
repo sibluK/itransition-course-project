@@ -10,7 +10,7 @@ import searchRoutes from './routes/search-routes.js';
 import fieldRoutes from './routes/fields-routes.js';
 import itemRoutes from './routes/item-routes.js';
 import cors from 'cors'
-import { corsOptions } from './config/cors.js';
+import { corsOptions } from './configs/cors.js';
 import { clerkMiddleware } from '@clerk/express';
 
 const app = express();

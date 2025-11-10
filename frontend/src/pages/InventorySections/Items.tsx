@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useInventoryContext } from "@/contexts/inventory-provider";
 
 export default function Items() {
     const { inventoryId } = useParams();
@@ -24,6 +25,7 @@ export default function Items() {
     const { data: customFields } = useFields({ inventoryId: Number(inventoryId) });
     const [editingItem, setEditingItem] = useState<Item | null>(null);
     const { t } = useTranslation();
+    const { writeAccess } = useInventoryContext();
 
     if (!inventoryId) {
         return <Spinner />
@@ -38,8 +40,10 @@ export default function Items() {
         return a.displayOrder - b.displayOrder;
     }) || [];
 
-    let columns: ColumnDef<Item>[] = [
-        {
+    const columns: ColumnDef<Item>[] = [];
+
+    if (writeAccess) {
+        columns.push({
             id: "select",
             header: ({ table }) => (
                 <Checkbox
@@ -59,25 +63,31 @@ export default function Items() {
                 />
             ),
             enableSorting: false,
-        },
-        ...enabledFields.map((field) => ({
-            accessorKey: `c_${field.fieldKey}`,
-            header: field.label
-        })),
-        {
+        });
+    }
+
+    columns.push(...enabledFields.map((field) => ({
+        accessorKey: `c_${field.fieldKey}`,
+        header: field.label
+    })));
+
+    if (writeAccess) {
+        columns.push({
             id: 'actions',
             header: 'Actions',
             cell: ({ row }) => <ActionDropdown item={row.original} onEdit={setEditingItem} />,
-        }
-    ];
+        });
+    }
   
     return (
         <div>
             <div className="mb-4">
-                <AddItemForm 
-                    inventoryId={Number(inventoryId)} 
-                    trigger={<Button><Plus className="mr-2 h-4 w-4" /> {t('add_item')}</Button>}
-                />
+                {writeAccess && (
+                    <AddItemForm 
+                        inventoryId={Number(inventoryId)} 
+                        trigger={<Button><Plus className="mr-2 h-4 w-4" /> {t('add_item')}</Button>}
+                    />
+                )}
             </div>
             <ItemsTable 
                 data={items}

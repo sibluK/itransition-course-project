@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import db from "../config/database.js";
+import db from "../configs/database.js";
 import { inventoriesTable } from "../db/schema.js";
 import { desc, sql } from "drizzle-orm";
 
