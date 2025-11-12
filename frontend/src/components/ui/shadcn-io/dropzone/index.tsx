@@ -7,6 +7,7 @@ import type { DropEvent, DropzoneOptions, FileRejection } from 'react-dropzone';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 type DropzoneContextType = {
   src?: File[];
@@ -159,6 +160,7 @@ export const DropzoneEmptyState = ({
   className,
 }: DropzoneEmptyStateProps) => {
   const { src, accept, maxSize, minSize, maxFiles } = useDropzoneContext();
+  const { t } = useTranslation();
 
   if (src) {
     return null;
@@ -189,14 +191,8 @@ export const DropzoneEmptyState = ({
         <UploadIcon size={16} />
       </div>
       <p className="my-2 w-full truncate text-wrap font-medium text-sm">
-        Upload {maxFiles === 1 ? 'a file' : 'files'}
+        {t("inv-creation-image-placeholder")}
       </p>
-      <p className="w-full truncate text-wrap text-muted-foreground text-xs">
-        Drag and drop or click to upload
-      </p>
-      {caption && (
-        <p className="text-wrap text-muted-foreground text-xs">{caption}.</p>
-      )}
     </div>
   );
 };

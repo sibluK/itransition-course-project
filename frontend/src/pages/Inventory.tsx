@@ -8,25 +8,27 @@ import { AlertTriangle, Check } from "lucide-react";
 import { InventorySocketProvider } from "@/contexts/inventory-socket-provider";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuth } from "@clerk/clerk-react";
-
-const tabs = [
-    { value: 'items', label: 'Items' },
-    { value: 'discussions', label: 'Discussions' },
-    { value: 'settings', label: 'Settings' },
-    { value: 'custom', label: 'Custom IDs' },
-    { value: 'access', label: 'Access' },
-    { value: 'fields', label: 'Fields' },
-    { value: 'statistics', label: 'Statistics' },
-];
+import { useTranslation } from "react-i18next";
 
 export default function Inventory() {
     const { inventoryId } = useParams();
     const { inventory, tags, writeAccess, isLoading, error } = useInventory({ inventoryId: Number(inventoryId) });
     const navigate = useNavigate();
     const location = useLocation();
-    const { userId } = useAuth();
+    const { userId, isSignedIn } = useAuth();
+    const { t } = useTranslation();
     const isOwner = inventory?.creatorId === userId;
     const isAdmin = useUserRole() === 'admin';
+
+    const tabs = [
+        { value: 'items', label: t("tab-items") },
+        { value: 'discussions', label: t("tab-discussions") },
+        { value: 'settings', label: t("tab-settings") },
+        { value: 'custom', label: t("tab-custom") },
+        { value: 'access', label: t("tab-access") },
+        { value: 'fields', label: t("tab-fields") },
+        { value: 'statistics', label: t("tab-statistics") },
+    ];
 
     const activeTab = useMemo(() => {
         const segments = location.pathname.split('/');
@@ -53,7 +55,7 @@ export default function Inventory() {
                         <h1 className="text-2xl lg:text-4xl font-bold text-nowrap">{inventory.title}</h1>
                         {(isOwner || isAdmin) && <AutoSaveStatus />}
                     </div>
-                    {writeAccess && (
+                    {writeAccess && isSignedIn && (
                         <Tabs value={activeTab} onValueChange={handleTabChange} className="overflow-x-auto mb-5">
                             <TabsList className="flex gap-1 justify-start">
                                 {tabs.map((tab) => {
@@ -79,6 +81,7 @@ export default function Inventory() {
 
 function AutoSaveStatus() {
     const { isSaving, hasChanges } = useInventoryContext();
+    const { t } = useTranslation();
     const saved = !hasChanges && !isSaving;
 
     return (
@@ -86,15 +89,15 @@ function AutoSaveStatus() {
             {isSaving && 
             <span className="flex items-center bg-amber-200 text-amber-900 px-2 py-1 rounded-md text-sm">
                 <Spinner className="inline-block w-4 h-4 mr-1" />
-                Saving...
+                {t("autosave-saving")}
             </span>}
             {(hasChanges && !isSaving) && <span className="flex items-center bg-red-200 text-red-900 px-2 py-1 rounded-md text-sm">
                 <AlertTriangle className="inline-block w-4 h-4 mr-1" />
-                Unsaved changes
+                {t("autosave-unsaved")}
             </span>}
             {saved && <span className="flex items-center bg-green-200 text-green-900 px-2 py-1 rounded-md text-sm">
                 <Check className="inline-block w-4 h-4 mr-1" />
-                All changes saved
+                {t("autosave-saved")}
             </span>}
         </div>
     );

@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Button } from "./ui/button";
 import { Trash } from "lucide-react";
 import { useInventoryContext } from "@/contexts/inventory-provider";
+import { useAuth } from "@clerk/clerk-react";
 
 interface ItemsTableProps {
     data: Item[];
@@ -19,6 +20,8 @@ export function ItemsTable({ data, columns }: ItemsTableProps) {
     const [rowSelection, setRowSelection] = useState({});
     const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
     const { writeAccess } = useInventoryContext();
+    const { isSignedIn } = useAuth();
+    const { t } = useTranslation();
 
     const table = useReactTable({
         data,
@@ -42,7 +45,7 @@ export function ItemsTable({ data, columns }: ItemsTableProps) {
 
     return (
         <div className="overflow-hidden rounded-md border">
-            {writeAccess && (
+            {writeAccess && isSignedIn && (
                 <div className="flex py-4 px-4">
                     <div className="flex gap-2">
                         <Button variant="destructive" disabled={table.getSelectedRowModel().rows.length === 0}>
@@ -88,7 +91,7 @@ export function ItemsTable({ data, columns }: ItemsTableProps) {
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                                    No results.
+                                    {t("no-results")}
                                 </TableCell>
                             </TableRow>
                         )}

@@ -18,6 +18,7 @@ import {
 import { MoreHorizontal, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useInventoryContext } from "@/contexts/inventory-provider";
+import { useAuth } from "@clerk/clerk-react";
 
 export default function Items() {
     const { inventoryId } = useParams();
@@ -26,6 +27,7 @@ export default function Items() {
     const [editingItem, setEditingItem] = useState<Item | null>(null);
     const { t } = useTranslation();
     const { writeAccess } = useInventoryContext();
+    const { isSignedIn } = useAuth();
 
     if (!inventoryId) {
         return <Spinner />
@@ -42,7 +44,7 @@ export default function Items() {
 
     const columns: ColumnDef<Item>[] = [];
 
-    if (writeAccess) {
+    if (writeAccess && isSignedIn) {
         columns.push({
             id: "select",
             header: ({ table }) => (
@@ -71,7 +73,7 @@ export default function Items() {
         header: field.label
     })));
 
-    if (writeAccess) {
+    if (writeAccess && isSignedIn) {
         columns.push({
             id: 'actions',
             header: 'Actions',
@@ -82,7 +84,7 @@ export default function Items() {
     return (
         <div>
             <div className="mb-4">
-                {writeAccess && (
+                {writeAccess && isSignedIn && (
                     <AddItemForm 
                         inventoryId={Number(inventoryId)} 
                         trigger={<Button><Plus className="mr-2 h-4 w-4" /> {t('add_item')}</Button>}

@@ -9,6 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Plus, Trash } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@clerk/clerk-react";
+import { useTranslation } from "react-i18next";
 
 export default function Discussions() {
     const { inventoryId } = useParams<{ inventoryId: string }>();
@@ -20,6 +21,7 @@ export default function Discussions() {
         addDiscussionPost, 
         removeDiscussionPost 
     } = useDiscussionPosts(Number(inventoryId));
+    const { t } = useTranslation();
 
     const onSubmitNewPost = async (content: string) => {
         await addDiscussionPost(content);
@@ -33,7 +35,7 @@ export default function Discussions() {
                 onClick={() => setIsAddingPost(!isAddingPost)}
             >
                 <Plus/>
-                Post
+                {t("button-post")}
             </Button>
             {isAddingPost && 
                 <AddDiscussionPostForm 
@@ -60,6 +62,7 @@ interface AddDiscussionPostFormProps {
 }
 
 function AddDiscussionPostForm({ onSubmit, onCancel }: AddDiscussionPostFormProps) {
+    const { t } = useTranslation();
     const [content, setContent] = useState("");
 
     const handleSubmit = async () => {
@@ -81,14 +84,14 @@ function AddDiscussionPostForm({ onSubmit, onCancel }: AddDiscussionPostFormProp
                 disabled={!content.trim()}
                 className="mt-3"
             >
-                Submit
+                {t("button-submit")}
             </Button>
             <Button 
                 variant="outline" 
                 onClick={onCancel}
                 className="mt-3 ml-2"
             >
-                Cancel
+                {t("button-cancel")}
             </Button>
         </div>
     );
@@ -102,7 +105,8 @@ interface DiscussionPostListProps {
 }
 
 function DiscussionPostList({ posts, removeDiscussionPost, isLoading, error }: DiscussionPostListProps) {
-    
+    const { t } = useTranslation();
+
     if (isLoading) {
         return <Spinner className="w-[50px] h-[50px] mx-auto my-10"/>
     }
@@ -113,7 +117,7 @@ function DiscussionPostList({ posts, removeDiscussionPost, isLoading, error }: D
     
     return (
         <div className="flex flex-col">
-            <h2 className="text-xl font-bold mb-3">Discussion Posts ({posts.length})</h2>
+            <h2 className="text-xl font-bold mb-3">{t("discussion-header", { post_count: posts.length})}</h2>
             {posts.map(post => (
                 <DiscussionPost
                     key={post.id}

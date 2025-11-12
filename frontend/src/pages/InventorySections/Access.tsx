@@ -4,6 +4,7 @@ import { UserAccessTable } from "@/components/user-access-table";
 import { useInventoryContext } from "@/contexts/inventory-provider";
 import { useInventoryAccess } from "@/hooks/useInventoryAccess";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce";
 
@@ -11,6 +12,7 @@ export default function Access() {
     const { data: inventory, updateData } = useInventoryContext();
     const [search, setSearch] = useState("");
     const [value] = useDebounce(search, 400);
+    const { t } = useTranslation();
     const { 
         usersWithWriteAccess, 
         addUserToWriteAccess, 
@@ -50,8 +52,8 @@ export default function Access() {
                     <FieldGroup className="flex items-center">
                         <Field orientation="responsive">
                             <FieldContent>
-                                <FieldLabel>Global Access</FieldLabel>
-                                <FieldDescription className="text-sm max-w-[500px]">Setting global access to public allows any signed in user to add, edit or delete items from this inventory.</FieldDescription>
+                                <FieldLabel>{t("access-selection-label")}</FieldLabel>
+                                <FieldDescription className="text-sm max-w-[500px]">{t("access-selection-description")}</FieldDescription>
                             </FieldContent>
                             <Select
                                 value={inventory.isPublic ? "public" : "private"}
@@ -61,8 +63,8 @@ export default function Access() {
                                     <SelectValue placeholder="Select access level" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="public">Public</SelectItem>
-                                    <SelectItem value="private">Private</SelectItem>
+                                    <SelectItem value="public">{t("select-public")}</SelectItem>
+                                    <SelectItem value="private">{t("select-private")}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </Field>

@@ -119,10 +119,10 @@ export function UserAccessTable({ data, search, setSearch, addUserToWriteAccess,
     return (
         <div className="overflow-hidden rounded-md border">
             <div className="flex p-3 items-center gap-4">
-                <h2 className="mr-auto">Users with Write Access</h2>
+                <h2 className="mr-auto">{t("access-table-header")}</h2>
                 <Button variant="outline" onClick={handleRemove} disabled={Object.keys(rowSelection).length === 0}>
                     <UserMinus/>
-                    Remove Access
+                    {t("button-revoke-access")}
                 </Button>
                 <AddUserToWriteAccessButton 
                     handleAddUserToWriteAccess={addUserToWriteAccess}
@@ -170,7 +170,7 @@ export function UserAccessTable({ data, search, setSearch, addUserToWriteAccess,
                     ) : (
                         <TableRow>
                             <TableCell colSpan={columns.length} className="h-24 text-center">
-                                No results.
+                                {t("no-results")}
                             </TableCell>
                         </TableRow>
                     )}
@@ -215,6 +215,7 @@ const AddUserToWriteAccessButton = ({ handleAddUserToWriteAccess }: { handleAddU
     const [showList, setShowList] = useState(false);
     const [value] = useDebounce(searchQuery, 400);
     const { data: users, isLoading } = useUsersSearch({ query: value });
+    const { t } = useTranslation();
 
     const handleInputChange = (value: string) => {
         setSearchQuery(value);
@@ -236,13 +237,13 @@ const AddUserToWriteAccessButton = ({ handleAddUserToWriteAccess }: { handleAddU
         <Dialog onOpenChange={() => setSelectedUser(null)}>
             <form>
                 <DialogTrigger asChild>
-                    <Button variant="default"><Plus />Add</Button>
+                    <Button variant="default"><Plus />{t("button-add")}</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Grant user Write Access</DialogTitle>
+                        <DialogTitle>{t("access-modal-header")}</DialogTitle>
                         <DialogDescription>
-                            Users with write access will be able to add, edit, and delete items within the inventory.
+                            {t("access-modal-description")}
                         </DialogDescription>
                     </DialogHeader>
                     {selectedUser && (
@@ -256,12 +257,12 @@ const AddUserToWriteAccessButton = ({ handleAddUserToWriteAccess }: { handleAddU
                     )}
                     <div className="grid gap-4 relative">
                         <div className="grid gap-3">
-                            <Label htmlFor="search">Name or Email</Label>
+                            <Label htmlFor="search">{t("access-modal-input-label")}</Label>
                             <Input
                                 id="search"
                                 value={searchQuery}
                                 onChange={(e) => handleInputChange(e.target.value)}
-                                placeholder="Enter name or email..."
+                                placeholder={t("access-modal-input-placeholder")}
                             />
                         </div>
                         {showList && searchQuery.length > 0 && (
@@ -283,16 +284,16 @@ const AddUserToWriteAccessButton = ({ handleAddUserToWriteAccess }: { handleAddU
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="p-2 text-gray-500">No users found.</div>
+                                    <div className="p-2 text-gray-500">{t("no-results")}</div>
                                 )}
                             </div>
                         )}
                         </div>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline">{t("button-cancel")}</Button>
                         </DialogClose>
-                        <Button onClick={onAddUser} type="submit">Grant Access</Button>
+                        <Button onClick={onAddUser} type="submit">{t("button-grant-access")}</Button>
                     </DialogFooter>
                 </DialogContent>
             </form>

@@ -17,7 +17,7 @@ i18n
         supportedLngs: Object.keys(supportedLngs),
         debug: true,
         interpolation: {
-            escapeValue: false,
+            escapeValue: false
         },
     });
 

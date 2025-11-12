@@ -16,6 +16,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 interface ComboboxProps {
     data: { label: string; value: string }[];
@@ -25,7 +26,8 @@ interface ComboboxProps {
 }
 
 export function Combobox({ data, value, onChange, classname }: ComboboxProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -39,15 +41,15 @@ export function Combobox({ data, value, onChange, classname }: ComboboxProps) {
         >
           {value
             ? data.find((item) => item.value === value)?.label
-            : "Select..."}
+            : t('inv-creation-category-placeholder')}
           <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-inherit p-0">
         <Command>
-          <CommandInput placeholder="Search..." />
+          <CommandInput placeholder={t("search_placeholder")} />
           <CommandList>
-            <CommandEmpty>No results.</CommandEmpty>
+            <CommandEmpty>{t("no_results_found")}</CommandEmpty>
             <CommandGroup>
               {data.map((item) => (
                 <CommandItem

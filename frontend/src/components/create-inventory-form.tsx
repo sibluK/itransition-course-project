@@ -14,6 +14,8 @@ import { Autocomplete } from "./autocomplete";
 import { useTags } from "@/hooks/useTags";
 import { UploadDropzone } from "./upload-dropzone";
 import { TagsList } from "./tags-list";
+import { Spinner } from "./ui/spinner";
+import { useTranslation } from "react-i18next";
 
 interface CreateInventoryFormProps {
     onSuccess: () => void;
@@ -25,6 +27,7 @@ export default function CreateInventoryForm({ onSuccess }: CreateInventoryFormPr
     const [tagsSearchInput, setTagsSearchInput] = useState<string>("");
     const [tagsSearch] = useDebounce(tagsSearchInput, 300);
     const { tags } = useTags({ search: tagsSearch });
+    const { t } = useTranslation();
 
     const defaultValues: CreateInventoryData = {
         title: "",
@@ -81,9 +84,9 @@ export default function CreateInventoryForm({ onSuccess }: CreateInventoryFormPr
                     name="title"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Title</FormLabel>
+                            <FormLabel>{t("inv-creation-title-label")}</FormLabel>
                             <FormControl>
-                                <Input placeholder="Inventory Title" {...field} />
+                                <Input placeholder={t("inv-creation-title-placeholder")} {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -94,9 +97,9 @@ export default function CreateInventoryForm({ onSuccess }: CreateInventoryFormPr
                     name="description"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Description</FormLabel>
+                            <FormLabel>{t("inv-creation-description-label")}</FormLabel>
                             <FormControl>
-                                <Textarea placeholder="A brief description..." {...field} />
+                                <Textarea placeholder={t("inv-creation-description-placeholder")} {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -107,7 +110,7 @@ export default function CreateInventoryForm({ onSuccess }: CreateInventoryFormPr
                     name="categoryId"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Category</FormLabel>
+                            <FormLabel>{t("inv-creation-category-label")}</FormLabel>
                             <FormControl>
                                 <Combobox 
                                     data={categories.map((c: Category) => {
@@ -128,13 +131,13 @@ export default function CreateInventoryForm({ onSuccess }: CreateInventoryFormPr
                     name="tags"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Tags</FormLabel>
+                            <FormLabel>{t("inv-creation-tags-label")}</FormLabel>
                             <FormControl>
                                 <Autocomplete 
                                     suggestions={tags.map((t: Tag) => t.name)}
                                     value={field.value || []}
                                     onChange={(tags) => field.onChange(tags)}
-                                    placeholder="Add tags..."
+                                    placeholder={t("inv-creation-tags-placeholder")}
                                     search={tagsSearchInput}
                                     onSearchChange={setTagsSearchInput}
                                 />
@@ -155,7 +158,7 @@ export default function CreateInventoryForm({ onSuccess }: CreateInventoryFormPr
                     name="image"
                     render={() => (
                         <FormItem>
-                            <FormLabel>Image</FormLabel>
+                            <FormLabel>{t("inv-creation-image-label")}</FormLabel>
                             <FormControl>
                                 <UploadDropzone
                                     onDrop={handleDrop}
@@ -169,7 +172,7 @@ export default function CreateInventoryForm({ onSuccess }: CreateInventoryFormPr
                     )}
                 />
                 <Button type="submit" disabled={isPending}>
-                    {isPending ? 'Creating...' : 'Create Inventory'}
+                    {isPending ? <Spinner /> : t("inv-creation-create-button")}
                 </Button>
             </form>
         </Form>

@@ -14,12 +14,14 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { useNavigate } from "react-router";
+import { Spinner } from "./ui/spinner";
 
 interface InventoriesTableProps {
     data: InventoryWithCategoryAndTags[];
+    loading: boolean;
 }
 
-export function InventoriesTable({ data }: InventoriesTableProps) {
+export function InventoriesTable({ data, loading }: InventoriesTableProps) {
     const { i18n, t } = useTranslation();
     const navigate = useNavigate();
     const [rowSelection, setRowSelection] = useState({});
@@ -117,30 +119,34 @@ export function InventoriesTable({ data }: InventoriesTableProps) {
                         </TableRow>
                     ))}
                 </TableHeader>
-                <TableBody>
-                    {table.getRowModel().rows?.length ? (
-                        table.getRowModel().rows.map((row) => (
-                            <TableRow
-                                key={row.id}
-                                data-state={row.getIsSelected() && "selected"}
-                                onClick={() => navigate(`/inventory/${row.original.inventory.id}/items`)}
-                                className="hover:cursor-pointer"
-                            >
-                                {row.getVisibleCells().map((cell) => (
-                                    <TableCell key={cell.id}>
-                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                    </TableCell>
-                                ))}
+                {loading ? (
+                    <Spinner className="w-[40px] h-[40px] flex mx-auto" />
+                ) : (
+                    <TableBody>
+                        {data.length > 0 ? (
+                            table.getRowModel().rows.map((row) => (
+                                <TableRow
+                                    key={row.id}
+                                    data-state={row.getIsSelected() && "selected"}
+                                    onClick={() => navigate(`/inventory/${row.original.inventory.id}/items`)}
+                                    className="hover:cursor-pointer"
+                                >
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell key={cell.id}>
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                    {t('no_results_found')}
+                                </TableCell>
                             </TableRow>
-                        ))
-                    ) : (
-                        <TableRow>
-                            <TableCell colSpan={columns.length} className="h-24 text-center">
-                                No results.
-                            </TableCell>
-                        </TableRow>
-                    )}
-                </TableBody>
+                        )}
+                    </TableBody>
+                )}
             </Table>
             <Pagination table={table} />
         </div>

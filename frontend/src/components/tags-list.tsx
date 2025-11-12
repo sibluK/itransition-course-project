@@ -9,7 +9,7 @@ export function TagsList({ tags, handleRemoveTag }: TagsListProps) {
             {tags.map((tagName) => (
                 <span
                     key={tagName}
-                    className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
+                    className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 hover:bg-red-400 hover:text-red-300 cursor-pointer"
                     onClick={() => handleRemoveTag(tagName)}
                 >
                     {tagName}

@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useDebounce } from "use-debounce";
 import { Autocomplete } from "@/components/autocomplete";
 import { TagsList } from "@/components/tags-list";
+import { useTranslation } from "react-i18next";
 
 export default function Settings() {
     const { data, updateData, uploadImage } = useInventoryContext();
@@ -18,6 +19,7 @@ export default function Settings() {
     const [tagsSearchInput, setTagsSearchInput] = useState<string>("");
     const [tagsSearch] = useDebounce(tagsSearchInput, 300);
     const { tags } = useTags({ search: tagsSearch });
+    const { t } = useTranslation();
 
     const handleDrop = async (acceptedFiles: File[]) => {
         const file = acceptedFiles[0];
@@ -46,12 +48,12 @@ export default function Settings() {
                     <FieldGroup>
                         <Field orientation="responsive">
                             <FieldContent>
-                                <FieldLabel>Title</FieldLabel>
-                                <FieldDescription>The title of the inventory.</FieldDescription>
+                                <FieldLabel>{t("inventory_title")}</FieldLabel>
+                                <FieldDescription>{t("inventory_title_description")}</FieldDescription>
                             </FieldContent>
                             <Input 
                                 id="title" 
-                                placeholder="Title"
+                                placeholder={t("inventory_title_placeholder")}
                                 className="sm:min-w-[300px]"
                                 value={data.title} 
                                 onChange={(e) => updateData({ title: e.target.value })}
@@ -61,12 +63,12 @@ export default function Settings() {
                     <FieldGroup>
                         <Field orientation="responsive">
                             <FieldContent>
-                                <FieldLabel>Description</FieldLabel>
-                                <FieldDescription>The description of the inventory.</FieldDescription>
+                                <FieldLabel>{t("inventory_description")}</FieldLabel>
+                                <FieldDescription>{t("inventory_description_description")}</FieldDescription>
                             </FieldContent>
                             <Textarea
                                 id="description" 
-                                placeholder="Description"
+                                placeholder={t("inventory_description_placeholder")}
                                 className="min-h-[100px] resize-y sm:min-w-[300px]" 
                                 value={data.description || ""} 
                                 onChange={(e) => updateData({ description: e.target.value })}
@@ -76,11 +78,11 @@ export default function Settings() {
                     <FieldGroup>
                         <Field orientation="responsive">
                             <FieldContent>
-                                <FieldLabel>Category</FieldLabel>
-                                <FieldDescription>The category of the inventory.</FieldDescription>
+                                <FieldLabel>{t("inventory_category")}</FieldLabel>
+                                <FieldDescription>{t("inventory_category_description")}</FieldDescription>
                             </FieldContent>
                             <Combobox 
-                                data={categories.map((c: Category) => ({ label: c.name, value: c.id.toString() }))}
+                                data={categories.map((c: Category) => ({ label: t(`category-${c.name.toLocaleLowerCase()}`), value: c.id.toString() }))}
                                 value={data.categoryId?.toString() || ""}
                                 onChange={(val) => 
                                     updateData({ categoryId: val === "" ? undefined : Number(val) })
@@ -92,15 +94,15 @@ export default function Settings() {
                     <FieldGroup>
                         <Field orientation="responsive" className="flex flex-wrap">
                             <FieldContent>
-                                <FieldLabel>Tags</FieldLabel>
-                                <FieldDescription>The tags associated with the inventory.</FieldDescription>
+                                <FieldLabel>{t("inventory_tags")}</FieldLabel>
+                                <FieldDescription>{t("inventory_tags_description")}</FieldDescription>
                             </FieldContent>
                             <div className="flex flex-wrap max-w-[400px]">
                                 <Autocomplete 
                                     suggestions={tags.map((t: Tag) => t.name)}
                                     value={tags.map(t => t.name)}
                                     onChange={(tags) => tags.forEach(handleAddTag)}
-                                    placeholder="Add tags..."
+                                    placeholder={t("inv-creation-tags-placeholder")}
                                     search={tagsSearchInput}
                                     onSearchChange={setTagsSearchInput}
                                 />
@@ -114,8 +116,8 @@ export default function Settings() {
                     <FieldGroup>
                         <Field orientation="responsive">
                             <FieldContent>
-                                <FieldLabel>Image</FieldLabel>
-                                <FieldDescription>The image URL of the inventory.</FieldDescription>
+                                <FieldLabel>{t("inventory_image")}</FieldLabel>
+                                <FieldDescription>{t("inventory_image_description")}</FieldDescription>
                             </FieldContent>
                             <UploadDropzone
                                 onDrop={handleDrop}

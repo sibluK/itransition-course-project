@@ -3,7 +3,7 @@ import { supportedLngs } from "../i18n/config.ts";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function LocaleSwitcher() {
-    const { i18n } = useTranslation();
+    const { i18n, t } = useTranslation();
 
     return (
         <Select value={i18n.resolvedLanguage} onValueChange={(value) => i18n.changeLanguage(value)}>
@@ -14,7 +14,7 @@ export default function LocaleSwitcher() {
                 <SelectGroup>
                     {Object.entries(supportedLngs).map(([code, name]) => (
                         <SelectItem value={code} key={code}>
-                            {name}
+                            {t(name)}
                         </SelectItem>
                     ))}
                 </SelectGroup>

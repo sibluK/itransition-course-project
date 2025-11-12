@@ -8,33 +8,32 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function Inventories() {
-    const { inventories, isLoading, error, refetch } = useUserInventories();
+    const { inventories, isLoading, error } = useUserInventories();
     const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const { t } = useTranslation();
 
     const handleCreationSuccess = () => {
         setIsSheetOpen(false);
-        refetch();
     }
 
     return (
         <div>
-            {isLoading && <p>Loading inventories...</p>}
             {error && <p>Error loading inventories: {String(error)}</p>}
             <div className="flex justify-around flex-wrap gap-10">
                 <div className="flex-1">
                     <div className="flex justify-between">
-                        <h1 className="text-2xl font-bold mb-4">Personal Inventories</h1>
+                        <h1 className="text-2xl font-bold mb-4">{t("my-inventories-created-header")}</h1>
                         <InventoryCreationSheet
                             isOpen={isSheetOpen}
                             onClose={setIsSheetOpen}
                             onSuccess={handleCreationSuccess}
                         />
                     </div>
-                    <InventoriesTable data={inventories.ownedInventories} />
+                    <InventoriesTable data={inventories.ownedInventories} loading={isLoading}/>
                 </div>
                 <div className="flex-1">
-                    <h1 className="text-2xl font-bold mb-4">Write Access</h1>
-                    <InventoriesTable data={inventories.writeAccessInventories} />
+                    <h1 className="text-2xl font-bold mb-4">{t("my-inventories-write-access-header")}</h1>
+                    <InventoriesTable data={inventories.writeAccessInventories} loading={isLoading}/>
                 </div>
             </div>
         </div>
@@ -59,9 +58,9 @@ function InventoryCreationSheet({ isOpen, onClose, onSuccess }: InventoryCreatio
             </SheetTrigger>
             <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
                 <SheetHeader>
-                    <SheetTitle>Create a new inventory</SheetTitle>
+                    <SheetTitle>{t("inv-creation-header-label")}</SheetTitle>
                     <SheetDescription className="mb-4">
-                        Fill in the details below to create a new inventory.
+                        {t("inv-creation-info")}
                     </SheetDescription>
                 </SheetHeader>
                 <CreateInventoryForm onSuccess={onSuccess} />

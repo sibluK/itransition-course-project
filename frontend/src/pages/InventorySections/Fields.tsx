@@ -12,6 +12,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, arrayMove, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { GripVertical } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Spinner } from "@/components/ui/spinner";
+import { useTranslation } from "react-i18next";
 
 type FieldType = "sl_string" | "ml_string" | "number" | "link" | "boolean";
 
@@ -23,18 +25,19 @@ interface FieldConfig {
     displayOrder: number;
 }
 
-const FIELD_TYPES: { type: FieldType; label: string; info: string }[] = [
-    { type: "sl_string", label: "Single Line Text", info: "A single line text field for short inputs." },
-    { type: "ml_string", label: "Multi Line Text", info: "A multi-line text area for longer inputs." },
-    { type: "number", label: "Number", info: "A field for numeric inputs." },
-    { type: "link", label: "Link", info: "A field for URL inputs." },
-    { type: "boolean", label: "Boolean", info: "A checkbox for true/false values." },
-];
-
 export default function Fields() {
     const { inventoryId } = useParams();
     const { data: fieldsData, isLoading, error, saveFields } = useFields({ inventoryId: Number(inventoryId) });
     const [fieldConfigs, setFieldConfigs] = useState<Record<string, FieldConfig>>({});
+    const { t } = useTranslation();
+
+    const FIELD_TYPES: { type: FieldType; label: string; info: string }[] = [
+        { type: "sl_string", label: t("sl_string_label"), info: t("sl_string_description") },
+        { type: "ml_string", label: t("ml_string_label"), info: t("ml_string_description") },
+        { type: "number", label: t("number_label"), info: t("number_description") },
+        { type: "link", label: t("link_label"), info: t("link_description") },
+        { type: "boolean", label: t("boolean_label"), info: t("boolean_description") },
+    ];
 
     useEffect(() => {
         setInitialData();
@@ -88,7 +91,7 @@ export default function Fields() {
         });
     }
 
-    if (isLoading) return <div>Loading fields...</div>;
+    if (isLoading) return <Spinner className="w-[40px] h-[40px] mx-auto" />;
     if (error) return <div>Error loading fields</div>;
 
     return (
@@ -104,8 +107,8 @@ export default function Fields() {
                 />
             ))}
             <div className="mt-4">
-                <Button onClick={handleSave}>Save Changes</Button>
-                <Button variant="outline" className="ml-2" onClick={handleCancel}>Cancel</Button>
+                <Button onClick={handleSave}>{t("button-save")}</Button>
+                <Button variant="outline" className="ml-2" onClick={handleCancel}>{t("button-cancel")}</Button>
             </div>
         </div>
     );
@@ -118,6 +121,7 @@ function FieldTypeSection({ type, title, info, configs, onChange }: {
     configs: Record<string, FieldConfig>;
     onChange: (fieldKey: string, updates: Partial<FieldConfig>) => void;
 }) {
+    const { t } = useTranslation();
     const [order, setOrder] = useState<string[]>([`${type}_1`, `${type}_2`, `${type}_3`]);
 
     const handleDragEnd = (event: any) => {
@@ -139,7 +143,7 @@ function FieldTypeSection({ type, title, info, configs, onChange }: {
         <>
             <div className="flex flex-wrap justify-between">
                 <div>
-                    <h2 className="text-xl font-semibold mb-3">{title} Fields</h2>
+                    <h2 className="text-xl font-semibold mb-3">{title} {t("fields")}</h2>
                     <p className="text-muted-foreground mb-2">{info}</p>
                 </div>
                 <div className="flex gap-5 flex-wrap">
@@ -180,6 +184,7 @@ interface CardProps {
 
 function CustomInputCard({ fieldKey, config, onChange }: CardProps) {
     const { listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: fieldKey });
+    const { t } = useTranslation();
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
@@ -208,24 +213,24 @@ function CustomInputCard({ fieldKey, config, onChange }: CardProps) {
                         className="mr-2"
                         id="is-enabled"
                     />
-                    <Label htmlFor="is-enabled">Enabled</Label>
+                    <Label htmlFor="is-enabled">{t("switch-enabled")}</Label>
                 </div>
                 <div>
-                    <Label htmlFor="label" className="mb-1 block">Label:</Label>
+                    <Label htmlFor="label" className="mb-1 block">{t("field-label")}:</Label>
                     <Input 
                         type="text"
                         id="label"
-                        placeholder="Label"
+                        placeholder={t("field-label-placeholder")}
                         value={config.label}
                         onChange={(e) => onChange(fieldKey, { label: e.target.value })}
                         disabled={!config.isEnabled}
                     />
                 </div>
                 <div>
-                    <Label htmlFor="label" className="mb-1 block">Description:</Label>
+                    <Label htmlFor="label" className="mb-1 block">{t("inventory_description")}:</Label>
                     <Textarea
                         id="description"
-                        placeholder="Description"
+                        placeholder={t("inv-creation-description-placeholder")}
                         value={config.description}
                         onChange={(e) => onChange(fieldKey, { description: e.target.value })}
                         disabled={!config.isEnabled}
