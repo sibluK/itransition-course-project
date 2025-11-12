@@ -96,3 +96,14 @@ export interface HomeInventoriesResponse {
     latestInventories: HomeInventory[];
     popularInventories: HomeInventory[];
 }
+
+export interface InventoryUpdatePayload {
+    id: number;
+    version: number;
+    image_url?: string;
+    title: string;
+    description?: string;
+    categoryId?: number;
+    isPublic: boolean;
+    tags: string[];
+}

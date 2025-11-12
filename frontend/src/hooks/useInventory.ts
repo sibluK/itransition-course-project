@@ -1,6 +1,7 @@
-import type { Inventory, Tag } from "@/types/models";
+import type { Inventory, InventoryUpdatePayload, Tag } from "@/types/models";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApiRequest } from "./useApiRequest";
+import { toast } from "sonner";
 
 interface UseInventoryProps {
     inventoryId: number;
@@ -24,6 +25,44 @@ export function useInventory({ inventoryId }: UseInventoryProps) {
         return data;
     }
 
+    const sendUpdateRequest = async (updates: Partial<InventoryUpdatePayload>) => {
+        const { data: responseData, code } = await sendRequest<InventoryUpdatePayload>({
+            method: "PATCH",
+            url: `/inventories/${inventoryId}`,
+            body: updates
+        });
+
+        if (code !== 200 || !responseData) {
+            throw { 
+                status: code, 
+                message: 'Failed to update inventory' 
+            };
+        }
+
+        return responseData;
+    };
+
+    const sendUpdateImage = async ({ imageFile, version}: { imageFile: File, version: number }) => {
+        const formData = new FormData();
+        formData.append("image", imageFile);
+        formData.append("version", String(version));
+
+        const { data: responseData, code } = await sendRequest<InventoryUpdatePayload>({
+            method: "PATCH",
+            url: `/inventories/${inventoryId}`,
+            formData
+        });
+
+        if (code !== 200 || !responseData) {
+            throw { 
+                status: code, 
+                message: 'Failed to upload image' 
+            };
+        }
+
+        return responseData;
+    };
+
     const deleteInventory = async (): Promise<void> => {
         await sendRequest({
             method: "DELETE",
@@ -39,6 +78,46 @@ export function useInventory({ inventoryId }: UseInventoryProps) {
         refetchOnMount: false
     });
 
+    const { mutateAsync: saveInventory, isPending } = useMutation({
+        mutationFn: sendUpdateRequest,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["inventory", { inventoryId }]})
+            toast.success("Inventory saved!")
+        },
+        onError: (error: any) => {
+            console.log(error)
+            if (error.status === 409) {
+                toast("Version Conflict", {
+                    description: "Another user has modified this inventory. Please refresh to get the latest data.",
+                    action: {
+                        label: "Refresh",
+                        onClick: () => queryClient.invalidateQueries({ queryKey: ["inventory", { inventoryId }]})
+                    }
+                })
+            } else {
+                toast("Unable to save changes", {
+                    description: "Something went wrong. Plasee reset the inventory information changes",
+                    action: {
+                        label: "Reset",
+                        onClick: () => queryClient.invalidateQueries({ queryKey: ["inventory", { inventoryId }]})
+                    }
+                })
+            }
+            
+        }
+    });
+
+    const { mutateAsync: uploadImage } = useMutation({
+        mutationFn: sendUpdateImage,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["inventory", { inventoryId }]})
+            toast.success("Image uploaded successfully");
+        },
+        onError: () => {
+            toast.error("Failed to upload image");
+        }
+    });
+
     const { mutateAsync: deleteInventoryMutation } = useMutation({
         mutationFn: deleteInventory,
         onSuccess: () => {
@@ -52,6 +131,9 @@ export function useInventory({ inventoryId }: UseInventoryProps) {
         writeAccess: data?.writeAccess || false,
         isLoading,
         error,
+        saveInventory,
+        isPending,
+        uploadImage,
         deleteInventory: deleteInventoryMutation,
     };
 }

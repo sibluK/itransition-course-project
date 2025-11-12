@@ -24,7 +24,7 @@ export default function Settings() {
     const handleDrop = async (acceptedFiles: File[]) => {
         const file = acceptedFiles[0];
         if (file) {
-            await uploadImage(file);
+            await uploadImage({ imageFile: file, version: data.version});
         }
     }
 
