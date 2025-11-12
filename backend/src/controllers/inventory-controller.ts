@@ -1,8 +1,8 @@
 import { clerkClient, getAuth } from "@clerk/express";
 import type { Request, Response } from "express";
 import db from "../configs/database.js";
-import { categoriesTable, inventoriesTable, inventoryTagsTable, inventoryWriteAccessTable, tagsTable } from "../db/schema.js";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { categoriesTable, inventoriesTable, inventoryTagsTable, inventoryWriteAccessTable, itemsTable, tagsTable } from "../db/schema.js";
+import { and, eq, inArray, sql, desc, count } from "drizzle-orm";
 import { deleteFileFromS3, uploadFileToS3 } from "../configs/s3.js";
 import { checkWriteAccess } from "../utils/dbUtil.js";
 
@@ -284,3 +284,78 @@ export const deleteInventory = async (req: Request, res: Response): Promise<void
         res.status(500).json({ error: 'Failed to delete inventory' });
     }
 }
+
+export const getHomeInventories = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const latestInventoriesResponse = await db
+            .select({
+               id: inventoriesTable.id,
+               creatorId: inventoriesTable.creatorId,
+               title: inventoriesTable.title,
+               description: inventoriesTable.description
+            })  
+            .from(inventoriesTable)
+            .orderBy(desc(inventoriesTable.createdAt))
+            .limit(5);
+
+        const popularInventoriesResponse = await db
+            .select({
+               id: inventoriesTable.id,
+               creatorId: inventoriesTable.creatorId,
+               title: inventoriesTable.title,
+               description: inventoriesTable.description,
+               item_count: count(itemsTable.id)
+            })
+            .from(inventoriesTable)
+            .leftJoin(itemsTable, eq(inventoriesTable.id, itemsTable.inventoryId))
+            .groupBy(inventoriesTable.id)
+            .orderBy(desc(count(itemsTable.id)))
+            .limit(5);
+
+        const users = await clerkClient.users.getUserList({
+            userId: [
+                ...latestInventoriesResponse.map(inventory => {
+                    return inventory.creatorId
+                }),
+                ...popularInventoriesResponse.map(inventory => {
+                    return inventory.creatorId
+                })
+            ]
+        });
+
+        const finalUsers = users.data.map(user => {
+            return {
+                id: user.id,
+                name: `${user.firstName} ${user.lastName}`,
+                email: user.emailAddresses[0]?.emailAddress,
+                imageUrl: user.imageUrl
+            };
+        });
+
+        const latestInventories = [
+            ...latestInventoriesResponse.map(inventory => {
+                return {
+                    ...inventory,
+                    user: finalUsers.filter(user => user.id === inventory.creatorId)[0]
+                };
+            })
+        ];
+
+        const popularInventories = [
+            ...popularInventoriesResponse.map(inventory => {
+                return {
+                    ...inventory,
+                    user: finalUsers.filter(user => user.id === inventory.creatorId)[0]
+                };
+            })
+        ];
+
+        res.status(200).json({
+            latestInventories,
+            popularInventories
+        });
+    } catch (error) {
+        console.error('Error fetching inventories:', error);
+        res.status(500).json({ error: 'Failed to fetch inventories'});
+    }
+};

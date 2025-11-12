@@ -1,13 +1,14 @@
 import { Router } from "express";
 import { checkStatus, hasWriteAccess } from "../middlewares/auth-middleware.js";
 import { requireAuth } from "@clerk/express";
-import { getUserInventories, getInventoryById, createInventory, deleteInventory, updateInventory } from "../controllers/inventory-controller.js";
+import { getUserInventories, getInventoryById, createInventory, deleteInventory, updateInventory, getHomeInventories } from "../controllers/inventory-controller.js";
 import multer from "multer";
 import { inventoryExists } from "../middlewares/inventory-middleware.js";
 
 const upload = multer({ storage: multer.memoryStorage() });
 const router = Router();
 
+router.get("/home", getHomeInventories);
 router.get("/users/:userId", requireAuth(), checkStatus(), getUserInventories);
 router.get("/:inventoryId", getInventoryById);
 router.post("/", requireAuth(), checkStatus(), upload.single("image"), createInventory);

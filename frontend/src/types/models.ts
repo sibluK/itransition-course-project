@@ -87,3 +87,12 @@ export interface DiscussionPost {
     createdAt: Date;
     updatedAt: Date;
 }
+
+export type HomeInventory = Pick<Inventory, 'id' | 'title' | 'description'> & {
+    user: AccessUser;
+}
+
+export interface HomeInventoriesResponse {
+    latestInventories: HomeInventory[];
+    popularInventories: HomeInventory[];
+}
