@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import db from "../configs/database.js";
 import { itemsTable } from "../db/schema.js";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray, asc } from "drizzle-orm";
 import { checkInventoryExists } from "../utils/dbUtil.js";
 import { getAuth } from "@clerk/express";
 
@@ -18,7 +18,8 @@ export const getItemsForInventory = async (req: Request, res: Response) => {
         const items = await db
             .select()
             .from(itemsTable)
-            .where(eq(itemsTable.inventoryId, Number(inventoryId)));
+            .where(eq(itemsTable.inventoryId, Number(inventoryId)))
+            .orderBy(asc(itemsTable.createdAt));
 
         res.status(200).json(items);
     } catch (error) {
@@ -86,8 +87,6 @@ export const updateItem = async (req: Request, res: Response) => {
             return;
         }
 
-        // Check if user has write access to the inventory
-
         const cleanedUpdates: Record<string, any> = {};
         
         for (const [key, value] of Object.entries(updates)) {
@@ -116,7 +115,7 @@ export const updateItem = async (req: Request, res: Response) => {
             .returning();
 
         if (updatedItem.length === 0) {
-           res.status(409).json({ message: 'Conflict: Item was modified by another user. Please refresh and try again.' });
+            res.status(409).json({ message: 'Conflict: Item was modified by another user. Please refresh and try again.' });
             return;
         }
 
@@ -129,22 +128,16 @@ export const updateItem = async (req: Request, res: Response) => {
 
 export const deleteItem = async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
-        const { version } = req.body;
+        const { itemIds } = req.body;
 
-        const result = await db
+        await db
             .delete(itemsTable)
-            .where(and(eq(itemsTable.id, Number(id)), eq(itemsTable.version, version)))
+            .where(and(inArray(itemsTable.id, itemIds)))
             .returning();
 
-        if (result.length === 0) {
-            return res.status(409).json({ message: 'Conflict: Item was modified by another user. Please refresh and try again.' });
-        }
-
-        res.status(200).json({ message: 'Item deleted' });
+        res.status(200).json({ message: 'Items deleted' });
     } catch (error) {
         console.error('Error deleting item:', error);
         res.status(500).json({ message: "Internal server error" });
     }
-
 }

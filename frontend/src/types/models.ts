@@ -58,7 +58,7 @@ export interface Item {
     createdAt: Date;
 }
 
-type FieldType = 'sl_string' | 'ml_string' | 'number' | 'link' | 'boolean';
+export type FieldType = 'sl_string' | 'ml_string' | 'number' | 'link' | 'boolean';
 
 export interface CustomField {
     id: number;

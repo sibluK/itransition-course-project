@@ -93,6 +93,7 @@
     "access-modal-input-label": "Naudotojo vardas arba el. paštas",
     "access-modal-input-placeholder": "Įveskite naudotojo vardą arba el. paštą...",
     "discussion-header": "Diskusijos įrašai ({{post_count}})",
+    "button-edit": "Redaguoti",
     "button-add": "Pridėti",
     "button-post": "Įrašas",
     "button-delete": "Ištrinti",

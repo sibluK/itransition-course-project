@@ -93,6 +93,7 @@
     "access-modal-input-label": "Name or Email",
     "access-modal-input-placeholder": "Enter name or email...",
     "discussion-header": "Discussion Posts ({{post_count}})",
+    "button-edit": "Edit",
     "button-add": "Add",
     "button-post": "Post",
     "button-delete": "Delete",

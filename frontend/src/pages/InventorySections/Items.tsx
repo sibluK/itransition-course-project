@@ -15,7 +15,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Plus } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useInventoryContext } from "@/contexts/inventory-provider";
 import { useAuth } from "@clerk/clerk-react";
@@ -25,7 +25,6 @@ export default function Items() {
     const { items } = useInventoryItems({ inventoryId: Number(inventoryId) });
     const { data: customFields } = useFields({ inventoryId: Number(inventoryId) });
     const [editingItem, setEditingItem] = useState<Item | null>(null);
-    const { t } = useTranslation();
     const { writeAccess } = useInventoryContext();
     const { isSignedIn } = useAuth();
 
@@ -83,14 +82,6 @@ export default function Items() {
   
     return (
         <div>
-            <div className="mb-4">
-                {writeAccess && isSignedIn && (
-                    <AddItemForm 
-                        inventoryId={Number(inventoryId)} 
-                        trigger={<Button><Plus className="mr-2 h-4 w-4" /> {t('add_item')}</Button>}
-                    />
-                )}
-            </div>
             <ItemsTable 
                 data={items}
                 columns={columns}
@@ -118,7 +109,7 @@ const ActionDropdown = ({ item, onEdit }: { item: Item, onEdit: (item: Item | nu
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => onEdit(item)}>
-                    {t?.('edit') || 'Edit'}
+                    {t?.('button-edit')}
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

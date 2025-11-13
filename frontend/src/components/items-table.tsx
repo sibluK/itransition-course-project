@@ -4,9 +4,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { Button } from "./ui/button";
-import { Trash } from "lucide-react";
+import { Plus, RotateCw, Trash } from "lucide-react";
 import { useInventoryContext } from "@/contexts/inventory-provider";
 import { useAuth } from "@clerk/clerk-react";
+import { useInventoryItems } from "@/hooks/useInventoryItems";
+import { AddItemForm } from "./add-item-form";
+import { useFields } from "@/hooks/useFields";
 
 interface ItemsTableProps {
     data: Item[];
@@ -14,7 +17,7 @@ interface ItemsTableProps {
     inventoryId: number;
 }
 
-export function ItemsTable({ data, columns }: ItemsTableProps) {
+export function ItemsTable({ data, columns, inventoryId }: ItemsTableProps) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [rowSelection, setRowSelection] = useState({});
@@ -22,6 +25,8 @@ export function ItemsTable({ data, columns }: ItemsTableProps) {
     const { writeAccess } = useInventoryContext();
     const { isSignedIn } = useAuth();
     const { t } = useTranslation();
+    const { deleteItems } = useInventoryItems({ inventoryId: Number(inventoryId) });
+    const { refetchFields } = useFields({ inventoryId: Number(inventoryId) });
 
     const table = useReactTable({
         data,
@@ -43,14 +48,27 @@ export function ItemsTable({ data, columns }: ItemsTableProps) {
         },
     })
 
+    const handleDeleteItems = async () => {
+        const selectedRowIds = table.getSelectedRowModel().rows.map(row => row.original.id);
+        if (selectedRowIds.length === 0) return;
+        await deleteItems(selectedRowIds);
+        table.resetRowSelection();
+    }
+
     return (
         <div className="overflow-hidden rounded-md border">
             {writeAccess && isSignedIn && (
                 <div className="flex py-4 px-4">
-                    <div className="flex gap-2">
-                        <Button variant="destructive" disabled={table.getSelectedRowModel().rows.length === 0}>
+                    <div className="flex gap-3 w-full">
+                        <AddItemForm 
+                            inventoryId={Number(inventoryId)} 
+                            trigger={<Button><Plus className="h-4 w-4" /> {t('button-add')}</Button>}
+                        />
+                        <Button onClick={handleDeleteItems} variant="destructive" disabled={table.getSelectedRowModel().rows.length === 0}>
                             <Trash className="h-4 w-4" />
-                            Delete Items
+                        </Button>
+                        <Button onClick={() => refetchFields()} variant="outline" className="ml-auto">
+                            <RotateCw className="h-4 w-4"/>
                         </Button>
                     </div>
                 </div>

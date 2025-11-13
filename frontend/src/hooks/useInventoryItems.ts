@@ -1,6 +1,7 @@
 import type { Item } from "@/types/models";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApiRequest } from "./useApiRequest";
+import { toast } from "sonner";
 
 interface UseInventoryItems {
     inventoryId: number;
@@ -28,19 +29,26 @@ export function useInventoryItems({ inventoryId }: UseInventoryItems) {
     };
 
     const updateItem = async ({itemId, updatedData, version}: { itemId: number; updatedData: Partial<Item>; version: number }): Promise<Item | null> => {
-        const { data } = await sendRequest<Item>({
+        const { data, code } = await sendRequest<Item>({
             method: "PATCH",
             url: `/items/${inventoryId}/${itemId}`,
             body: { ...updatedData, version }
         });
+        if (code !== 200 || !data) {
+            throw { 
+                status: code,
+                message: 'Failed to update item'
+            };
+        }
+
         return data;
     };
 
-    const deleteItem = async (itemId: number, version: number): Promise<void> => {
+    const deleteItems = async (itemIds: number[]): Promise<void> => {
         await sendRequest<void>({
             method: "DELETE",
-            url: `/items/${inventoryId}/${itemId}`,
-            body: { version }
+            url: `/items/${inventoryId}`,
+            body: { itemIds }
         });
     };
 
@@ -59,27 +67,49 @@ export function useInventoryItems({ inventoryId }: UseInventoryItems) {
                 if (!oldData) return [newItem];
                 return [...oldData, newItem];
             });
+            toast.success("Item created successfully");
         }
     });
 
     const { mutateAsync: updateItemMutation } = useMutation({
         mutationFn: ({ itemId, updatedData, version }: { itemId: number;  updatedData: Partial<Item>, version: number }) => updateItem( {itemId, updatedData, version} ),
+        retry: false,
         onSuccess: (updatedItem) => {
             if (!updatedItem) return;
             queryClient.setQueryData(['inventoryItems', { inventoryId }], (oldData: Item[]) => {
                 if (!oldData) return oldData;
                 return oldData.map(item => item.id === updatedItem.id ? updatedItem : item);
             });
+        },
+        onError: async (error: any) => {
+            console.error('Error updating item:', error);
+            
+            if (error.status === 409) {
+                await queryClient.invalidateQueries({ queryKey: ["inventoryItems", { inventoryId }]});
+                
+                toast.error("Version Conflict", {
+                    description: "Another user modified this item. The form has been closed and data refreshed. Please try again.",
+                    duration: 5000,
+                });
+                
+            } else {
+                toast.error("Unable to save changes", {
+                    description: "Something went wrong. Please try again.",
+                });
+            }
+            
+            throw error;
         }
     });
 
     const { mutateAsync: deleteItemMutation } = useMutation({
-        mutationFn: ({ itemId, version }: { itemId: number; version: number }) => deleteItem(itemId, version),
-        onSuccess: (_, { itemId }) => {
+        mutationFn: (itemIds: number[]) => deleteItems(itemIds),
+        onSuccess: (_, itemIds) => {
             queryClient.setQueryData(['inventoryItems', { inventoryId }], (oldData: Item[]) => {
                 if (!oldData) return oldData;
-                return oldData.filter(item => item.id !== itemId);
+                return oldData.filter(item => !itemIds.includes(item.id));
             });
+            toast.success(`${itemIds.length} item(s) deleted successfully`);
         }
     });
 
@@ -89,6 +119,6 @@ export function useInventoryItems({ inventoryId }: UseInventoryItems) {
         error,
         createItem: createItemMutation,
         updateItem: updateItemMutation,
-        deleteItem: deleteItemMutation,
+        deleteItems: deleteItemMutation,
     }
 }

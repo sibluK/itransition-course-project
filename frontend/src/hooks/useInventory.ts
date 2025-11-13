@@ -84,26 +84,9 @@ export function useInventory({ inventoryId }: UseInventoryProps) {
             queryClient.invalidateQueries({ queryKey: ["inventory", { inventoryId }]})
             toast.success("Inventory saved!")
         },
-        onError: (error: any) => {
-            console.log(error)
-            if (error.status === 409) {
-                toast("Version Conflict", {
-                    description: "Another user has modified this inventory. Please refresh to get the latest data.",
-                    action: {
-                        label: "Refresh",
-                        onClick: () => queryClient.invalidateQueries({ queryKey: ["inventory", { inventoryId }]})
-                    }
-                })
-            } else {
-                toast("Unable to save changes", {
-                    description: "Something went wrong. Plasee reset the inventory information changes",
-                    action: {
-                        label: "Reset",
-                        onClick: () => queryClient.invalidateQueries({ queryKey: ["inventory", { inventoryId }]})
-                    }
-                })
-            }
-            
+        onError: (error) => {
+            console.log(error);
+            handleConflict(error);
         }
     });
 
@@ -113,8 +96,9 @@ export function useInventory({ inventoryId }: UseInventoryProps) {
             queryClient.invalidateQueries({ queryKey: ["inventory", { inventoryId }]})
             toast.success("Image uploaded successfully");
         },
-        onError: () => {
-            toast.error("Failed to upload image");
+        onError: (error) => {
+            console.log(error);
+            handleConflict(error);
         }
     });
 
@@ -124,6 +108,26 @@ export function useInventory({ inventoryId }: UseInventoryProps) {
             queryClient.invalidateQueries({ queryKey: ['inventories'] });
         },
     });
+
+    const handleConflict = (error: any) => {
+        if (error.status === 409) {
+            toast("Version Conflict", {
+                description: "Another user has modified this inventory. Please refresh to get the latest data.",
+                action: {
+                    label: "Refresh",
+                    onClick: () => queryClient.invalidateQueries({ queryKey: ["inventory", { inventoryId }]})
+                }
+            })
+        } else {
+            toast("Unable to save changes", {
+                description: "Something went wrong. Please reset the inventory information changes",
+                action: {
+                    label: "Reset",
+                    onClick: () => queryClient.invalidateQueries({ queryKey: ["inventory", { inventoryId }]})
+                }
+            })
+        } 
+    }
 
     return {
         inventory: data?.inventory,

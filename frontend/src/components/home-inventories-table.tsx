@@ -69,7 +69,7 @@ export function HomeInventoriesTable({ data, loading }: HomeInventoriesTableProp
                     ))}
                 </TableHeader>
                 {loading ? (
-                    <Spinner className="w-[40px] h-[40px] flex mx-auto" />
+                    <Spinner className="w-[40px] h-[40px]" />
                 ) : (
                     <TableBody>
                         {data.length > 0 ? (

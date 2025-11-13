@@ -25,7 +25,7 @@ export function useFields({ inventoryId }: UseFieldsProps) {
         });
     };
 
-    const { data, error, isLoading } = useQuery({
+    const { data, error, isLoading, refetch } = useQuery({
         queryKey: ["customFields", { inventoryId }],
         queryFn: fetchInventoryFields,
         enabled: !!inventoryId,
@@ -36,5 +36,5 @@ export function useFields({ inventoryId }: UseFieldsProps) {
         mutationFn: updateInventoryFields
     });
 
-    return { data, error, isLoading, saveFields };
+    return { data, error, isLoading, refetchFields: refetch, saveFields };
 }

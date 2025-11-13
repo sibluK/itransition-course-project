@@ -9,6 +9,6 @@ const router = Router();
 router.get('/:inventoryId', inventoryExists, getItemsForInventory);
 router.post('/:inventoryId', requireAuth(), checkStatus(), inventoryExists, hasWriteAccess("public"), createItem);
 router.patch('/:inventoryId/:id', requireAuth(), checkStatus(), inventoryExists, hasWriteAccess("public"), updateItem);
-router.delete('/:inventoryId/:id', requireAuth(), checkStatus(), inventoryExists, hasWriteAccess("public"), deleteItem);
+router.delete('/:inventoryId', requireAuth(), checkStatus(), inventoryExists, hasWriteAccess("public"), deleteItem);
 
 export default router;
