@@ -16,6 +16,7 @@ import Layout from './components/layout'
 import ItemPage from './pages/ItemPage'
 import UserInventories from './pages/UserInventories'
 import Search from './pages/Search'
+import { Integrations } from './pages/InventorySections/Integrations'
 
 function App() {
     return (
@@ -35,6 +36,7 @@ function App() {
                         <Route path="access" element={<Access />} />
                         <Route path="fields" element={<Fields />} />
                         <Route path="statistics" element={<Statistics />} />
+                        <Route path="integrations" element={<Integrations /> } />
                         <Route index element={<Navigate to="items" replace />} />
                     </Route>
                     <Route path="/search" element={<Search />} />

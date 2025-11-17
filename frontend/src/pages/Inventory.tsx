@@ -28,6 +28,7 @@ export default function Inventory() {
         { value: 'access', label: t("tab-access") },
         { value: 'fields', label: t("tab-fields") },
         { value: 'statistics', label: t("tab-statistics") },
+        { value: 'integrations', label: t("tab-integrations")}
     ];
 
     const activeTab = useMemo(() => {

@@ -20,6 +20,7 @@ export const inventoriesTable = pgTable("inventories", {
     version: integer().notNull().default(1),
     updatedAt: timestamp().notNull().defaultNow(),
     createdAt: timestamp().notNull().defaultNow(),
+    apiToken: varchar({ length: 255 }).notNull().unique(),
     },
     (table) => [
         index("inventory_search_idx").using(

@@ -1,10 +1,12 @@
 import { clerkClient, getAuth } from "@clerk/express";
 import type { Request, Response } from "express";
 import db from "../configs/database.js";
-import { categoriesTable, inventoriesTable, inventoryTagsTable, inventoryWriteAccessTable, itemsTable, tagsTable } from "../db/schema.js";
-import { and, eq, inArray, sql, desc, count } from "drizzle-orm";
+import { categoriesTable, customFieldsTable, inventoriesTable, inventoryTagsTable, inventoryWriteAccessTable, itemsTable, tagsTable } from "../db/schema.js";
+import { and, eq, inArray, sql, desc, count, asc } from "drizzle-orm";
 import { deleteFileFromS3, uploadFileToS3 } from "../configs/s3.js";
-import { checkWriteAccess } from "../utils/dbUtil.js";
+import { checkWriteAccess, findInventoryByApiToken, generateApiToken } from "../utils/dbUtil.js";
+import { randomBytes } from "crypto";
+import * as bcrypt from 'bcrypt';
 
 export const getUserInventories = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -133,6 +135,7 @@ export const createInventory = async (req: Request, res: Response): Promise<void
                 description,
                 categoryId: categoryId ? Number(categoryId) : undefined,
                 image_url: uploadedImageUrl,
+                apiToken: await generateApiToken(),
             })
             .returning();
 
@@ -357,5 +360,150 @@ export const getHomeInventories = async (req: Request, res: Response): Promise<v
     } catch (error) {
         console.error('Error fetching inventories:', error);
         res.status(500).json({ error: 'Failed to fetch inventories'});
+    }
+};
+
+export const getInventoryApiToken = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const inventory = req.inventory;
+
+        const plainToken = randomBytes(32).toString("hex");
+        const hashedToken = await bcrypt.hash(plainToken, 10);
+
+        await db
+            .update(inventoriesTable)
+            .set({
+                apiToken: hashedToken
+            })
+            .where(eq(inventoriesTable.id, Number(inventory!.id)));
+
+        res.status(200).json({ apiToken: plainToken });
+    } catch (error) {
+        console.error('Error fetching inventory API token:', error);
+        res.status(500).json({ error: 'Failed to fetch inventory API token' });
+    }
+}
+
+interface AggregatedDataResponse {
+    title: string;
+    description: string;
+    totalItems: number;
+    fields: Field[];
+}
+
+type Field = {
+    id: number;
+    name: string;
+    type: FieldType;
+    aggregatedData?: {
+        avg?: number;
+        min?: number;
+        max?: number;
+        popular?: string[];
+    };
+};
+
+type FieldType = 'sl_string' | 'ml_string' | 'number' | 'link' | 'boolean';
+
+export const getAggregatedData = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const apiToken = req.query.apiToken as string;
+        if (!apiToken) {
+            res.status(400).json({ error: 'API token is required' });
+            return;
+        }
+
+        const inventory = await findInventoryByApiToken(apiToken);
+        if (!inventory) {
+            res.status(404).json({ error: 'Inventory not found' });
+            return;
+        }
+
+        const totalItemsResult = await db
+            .select({ count: count() })
+            .from(itemsTable)
+            .where(eq(itemsTable.inventoryId, inventory.id));
+        const totalItems = totalItemsResult[0]?.count || 0;
+
+        const enabledFields = await db
+            .select()
+            .from(customFieldsTable)
+            .where(and(
+                eq(customFieldsTable.inventoryId, inventory.id),
+                eq(customFieldsTable.isEnabled, true)
+            ));
+
+        const fields: Field[] = await Promise.all(
+            enabledFields.map(async (field) => {
+                const fieldData: Field = {
+                    id: field.id,
+                    name: field.label,
+                    type: field.fieldType as FieldType,
+                };
+
+                const columnName = 'c_' + field.fieldKey;
+
+                if (field.fieldType === 'number') {
+                    const aggResult = await db
+                        .select({
+                            avg: sql<number>`avg(${sql.identifier(columnName)}::numeric)`,
+                            min: sql<number>`min(${sql.identifier(columnName)}::numeric)`,
+                            max: sql<number>`max(${sql.identifier(columnName)}::numeric)`,
+                        })
+                        .from(itemsTable)
+                        .where(and(
+                            eq(itemsTable.inventoryId, inventory.id),
+                            sql`${sql.identifier(columnName)} IS NOT NULL`
+                        ));
+                    fieldData.aggregatedData = {
+                        avg: aggResult[0]?.avg || 0, 
+                        min: aggResult[0]?.min || 0,
+                        max: aggResult[0]?.max || 0,
+                    };
+                } else if (['sl_string', 'ml_string', 'link'].includes(field.fieldType)) {
+                    const popularResult = await db
+                        .select({
+                            value: sql<string>`${sql.identifier(columnName)}`,
+                            count: count(),
+                        })
+                        .from(itemsTable)
+                        .where(and(
+                            eq(itemsTable.inventoryId, inventory.id),
+                            sql`${sql.identifier(columnName)} IS NOT NULL`
+                        ))
+                        .groupBy(sql`${sql.identifier(columnName)}`)
+                        .orderBy(desc(count()))
+                        .limit(5);
+                    fieldData.aggregatedData = { popular: popularResult.map(r => r.value).filter(v => v.length > 0 && v !== null) };
+                } else if (field.fieldType === 'boolean') {
+                    const popularResult = await db
+                        .select({
+                            value: sql<string>`${sql.identifier(columnName)}`,
+                            count: count(),
+                        })
+                        .from(itemsTable)
+                        .where(eq(itemsTable.inventoryId, inventory.id))
+                        .groupBy(sql`${sql.identifier(columnName)}`)
+                        .orderBy(desc(count()))
+                        .limit(1);
+                    fieldData.aggregatedData = { popular: popularResult.map(r => {
+                        return r.value ? 'true' : 'false';
+                    })};
+                }
+                return fieldData;
+            })
+        );
+
+        const response: AggregatedDataResponse = {
+            title: inventory.title,
+            description: inventory.description || '',
+            totalItems,
+            fields,
+        };
+
+        res.status(200).json(response);
+    } catch (error) {
+        console.error('Error fetching aggregated data:', error);
+        res.status(500).json({ error: 'Failed to fetch aggregated data' });
     }
 };
